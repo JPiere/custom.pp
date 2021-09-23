@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: custom.pp
+Bundle-SymbolicName: custom.pp;singleton:=true
+Bundle-Version: 8.2.0.qualifier
+Bundle-Vendor: OSS ERP Solutions
+Automatic-Module-Name: custom.pp
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Service-Component: OSGI-INF/*.xml
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.adempiere.base;bundle-version="8.2.0",
+ org.adempiere.plugin.utils;bundle-version="8.2.0"
+Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator

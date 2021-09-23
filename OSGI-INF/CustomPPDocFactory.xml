@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="customPPDocFactory">
+   <implementation class="custom.pp.jpiere.base.plugin.factory.CustomPPDocFactory"/>
+   <property name="service.ranking" type="Integer" value="8"/>
+   <property name="gaap" type="String" value="*"/>
+   <service>
+      <provide interface="org.adempiere.base.IDocFactory"/>
+   </service>
+</scr:component>
