@@ -77,7 +77,7 @@ public class CustomPPModelFactory implements IModelFactory {
 			className = Util.replace(className, "_", "");
 
 			//	Search packages
-			StringBuffer name = new StringBuffer("jpiere.base.plugin.org.adempiere.model").append(".M").append(className);
+			StringBuffer name = new StringBuffer("custom.pp.jpiere.base.plugin.org.adempiere.model").append(".M").append(className);
 			Class<?> clazz = getPOclass(name.toString(), tableName);
 			if (clazz != null)
 			{
@@ -87,7 +87,7 @@ public class CustomPPModelFactory implements IModelFactory {
 
 
 			//	Adempiere Extension
-			clazz = getPOclass("jpiere.base.plugin.org.adempiere.model.X_" + tableName, tableName);
+			clazz = getPOclass("custom.pp.jpiere.base.plugin.org.adempiere.model.X_" + tableName, tableName);
 			if (clazz != null)
 			{
 				s_classCache.put(tableName, clazz);

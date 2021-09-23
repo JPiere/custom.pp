@@ -45,7 +45,7 @@ public class CustomPPProcessFactory implements IProcessFactory {
 	public ProcessCall newProcessInstance(String className) {
 
 		if (className.startsWith("custom.pp")
-				|| className.startsWith("jpiere.base.plugin.org.adempiere.process.pp"))
+				|| className.startsWith("jpiere.base.plugin.org.adempiere.process.PP"))
 		{
 			className = "custom.pp." + className;
 			ProcessCall process = null;
