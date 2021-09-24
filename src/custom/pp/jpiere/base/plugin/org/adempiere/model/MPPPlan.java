@@ -134,6 +134,17 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			setJP_ProductionQtyFact(getJP_ProductionQtyFact().setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP));
 		}
 
+		//Check Doc Type
+		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
+		{
+			if(!getC_DocType().getDocBaseType().equals("JDP"))
+			{
+				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType")) ;
+				return false;
+			}
+		}
+
+
 		//For Tree
 		setName(getJP_Name());
 

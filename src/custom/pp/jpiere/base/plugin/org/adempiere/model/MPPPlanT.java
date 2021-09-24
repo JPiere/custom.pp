@@ -103,6 +103,27 @@ public class MPPPlanT extends X_JP_PP_PlanT {
 			}
 		}
 
+		//Check Doc Type
+		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
+		{
+			if(!getC_DocType().getDocBaseType().equals("JDP"))
+			{
+				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType") +" : JDP") ;
+				return false;
+			}
+		}
+
+		//Check Doc Type
+		if(newRecord || is_ValueChanged(MPPDoc.DOC_COLUMNNAME_C_DocTypeTarget_ID))
+		{
+			if(!getC_DocTypeTarget().getDocBaseType().equals("JDF"))
+			{
+				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType") +" : JDF") ;
+				return false;
+			}
+		}
+
+
 		//For Tree
 		setName(getJP_Name());
 

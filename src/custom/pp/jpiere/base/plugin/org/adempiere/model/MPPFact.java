@@ -134,6 +134,18 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			setProductionQty(getProductionQty().setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP));
 		}
 
+
+		//Check Doc Type
+		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
+		{
+			if(!getC_DocType().getDocBaseType().equals("JDF"))
+			{
+				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType")) ;
+				return false;
+			}
+		}
+
+
 		return true;
 	}
 
