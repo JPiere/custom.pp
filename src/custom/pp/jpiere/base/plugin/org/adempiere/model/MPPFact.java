@@ -955,7 +955,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 	 */
 	public boolean reverseAccrualIt()
 	{
-		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REVERSECORRECT);
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_BEFORE_REVERSEACCRUAL);
 		if (m_processMsg != null)
 			return false;
 
@@ -978,7 +978,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 		}
 
-		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSECORRECT);
+		m_processMsg = ModelValidationEngine.get().fireDocValidate(this,ModelValidator.TIMING_AFTER_REVERSEACCRUAL);
 		if (m_processMsg != null)
 			return false;
 

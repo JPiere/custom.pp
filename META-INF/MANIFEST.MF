@@ -11,3 +11,4 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: org.adempiere.base;bundle-version="8.2.0",
  org.adempiere.plugin.utils;bundle-version="8.2.0"
 Bundle-Activator: org.adempiere.plugin.utils.AdempiereActivator
+Export-Package: custom.pp.jpiere.base.plugin.org.adempiere.model
