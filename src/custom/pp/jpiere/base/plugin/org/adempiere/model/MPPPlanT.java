@@ -104,7 +104,7 @@ public class MPPPlanT extends X_JP_PP_PlanT {
 		}
 
 		//Check Doc Type
-		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
+		if(newRecord || is_ValueChanged(MPPPlanT.COLUMNNAME_C_DocType_ID))
 		{
 			if(!getC_DocType().getDocBaseType().equals("JDP"))
 			{
@@ -114,7 +114,7 @@ public class MPPPlanT extends X_JP_PP_PlanT {
 		}
 
 		//Check Doc Type
-		if(newRecord || is_ValueChanged(MPPDoc.DOC_COLUMNNAME_C_DocTypeTarget_ID))
+		if(newRecord || is_ValueChanged(MPPPlanT.COLUMNNAME_C_DocTypeTarget_ID))
 		{
 			if(!getC_DocTypeTarget().getDocBaseType().equals("JDF"))
 			{
