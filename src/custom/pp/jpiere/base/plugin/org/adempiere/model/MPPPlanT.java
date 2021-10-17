@@ -133,6 +133,9 @@ public class MPPPlanT extends X_JP_PP_PlanT {
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
+		if(!success)
+			return false;
+
 		//Update Line Qty
 		if(!newRecord && is_ValueChanged(MPPPlanT.COLUMNNAME_ProductionQty))
 		{

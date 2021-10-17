@@ -154,6 +154,9 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
+		if(!success)
+			return false;
+
 		//Update Line Qty
 		if(!newRecord && is_ValueChanged(MPPFact.COLUMNNAME_ProductionQty))
 		{

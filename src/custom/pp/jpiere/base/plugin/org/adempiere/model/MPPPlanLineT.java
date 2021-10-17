@@ -104,6 +104,9 @@ public class MPPPlanLineT extends X_JP_PP_PlanLineT {
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
+		if(!success)
+			return false;
+
 		//Update parent ProductionQty
 		if (isEndProduct() && (newRecord || is_ValueChanged(COLUMNNAME_PlannedQty) || is_ValueChanged(COLUMNNAME_IsActive)) )
 		{

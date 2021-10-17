@@ -121,6 +121,9 @@ public class MPPFactLine extends X_JP_PP_FactLine {
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
+		if(!success)
+			return false;
+
 		//Update Parent ProductionQty
 		if (isEndProduct() && (newRecord || is_ValueChanged(COLUMNNAME_MovementQty)) )
 		{

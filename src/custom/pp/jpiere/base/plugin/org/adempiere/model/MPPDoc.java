@@ -104,7 +104,7 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
-		return true;
+		return success;
 	}
 
 	/**

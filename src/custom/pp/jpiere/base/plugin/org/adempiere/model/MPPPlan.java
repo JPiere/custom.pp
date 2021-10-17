@@ -154,6 +154,9 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
+		if(!success)
+			return false;
+
 		//Update Line Qty
 		if(!newRecord && is_ValueChanged(MPPPlan.COLUMNNAME_ProductionQty))
 		{
