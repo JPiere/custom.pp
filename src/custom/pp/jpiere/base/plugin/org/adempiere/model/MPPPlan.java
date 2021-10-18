@@ -144,7 +144,6 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			}
 		}
 
-
 		//For Tree
 		setName(getJP_Name());
 
@@ -195,6 +194,22 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 					return false;
 				}
 			}
+		}
+
+		return true;
+	}
+
+
+
+	@Override
+	protected boolean beforeDelete()
+	{
+		MPPFact[] facts = getPPFacts();
+		if(facts.length > 0)
+		{
+			//You can't delete this PP Plan, because there are some PP Fact.
+			log.saveError("Error", Msg.getMsg(getCtx(), "JP_PP_CannotDeletePlan")) ;
+			return false;
 		}
 
 		return true;

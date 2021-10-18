@@ -98,6 +98,7 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 			}
 		}
 
+
 		return true;
 	}
 
@@ -105,6 +106,20 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
 		return success;
+	}
+
+	@Override
+	protected boolean beforeDelete()
+	{
+		MPPFact[] facts = getPPFacts();
+		if(facts.length > 0)
+		{
+			//You can't delete this PP Doc, because there are some PP Fact.
+			log.saveError("Error", Msg.getMsg(getCtx(), "JP_PP_CannotDeleteDoc")) ;
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -667,6 +682,49 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 	{
 		return getPPPlans(false, null);
 	}
+
+
+	private MPPFact[] m_PPFacts = null;
+
+	public MPPFact[] getPPFacts (String whereClause, String orderClause)
+	{
+		StringBuilder whereClauseFinal = new StringBuilder(MPPFact.COLUMNNAME_JP_PP_Doc_ID+"=? ");
+		if (!Util.isEmpty(whereClause, true))
+			whereClauseFinal.append(whereClause);
+		if (orderClause.length() == 0)
+			orderClause = MPPFact.COLUMNNAME_JP_PP_Fact_ID;
+		//
+		List<MPPFact> list = new Query(getCtx(), MPPFact.Table_Name, whereClauseFinal.toString(), get_TrxName())
+										.setParameters(get_ID())
+										.setOrderBy(orderClause)
+										.list();
+
+		return list.toArray(new MPPFact[list.size()]);
+
+	}
+
+	public MPPFact[] getPPFacts(boolean requery, String orderBy)
+	{
+		if (m_PPFacts != null && !requery) {
+			set_TrxName(m_PPFacts, get_TrxName());
+			return m_PPFacts;
+		}
+		//
+		String orderClause = "";
+		if (orderBy != null && orderBy.length() > 0)
+			orderClause += orderBy;
+		else
+			orderClause += MPPFact.COLUMNNAME_JP_PP_Fact_ID;
+
+		m_PPFacts = getPPFacts(null, orderClause);
+		return m_PPFacts;
+	}
+
+	public MPPFact[] getPPFacts()
+	{
+		return getPPFacts(false, null);
+	}
+
 
 	public MPPPlan getPPPlan(int seqNo, int M_Product_ID, String value)
 	{
