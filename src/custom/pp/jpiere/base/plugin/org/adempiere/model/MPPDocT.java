@@ -15,11 +15,9 @@ package custom.pp.jpiere.base.plugin.org.adempiere.model;
 
 import java.math.RoundingMode;
 import java.sql.ResultSet;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Properties;
 
-import org.compiere.model.MProduct;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MUOM;
 import org.compiere.model.Query;
@@ -48,21 +46,6 @@ public class MPPDocT extends X_JP_PP_DocT {
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
-		//Set Value
-		if(Util.isEmpty(getValue()))
-		{
-			MProduct product = MProduct.get(getM_Product_ID());
-			String value = product.getValue() + "_" + LocalDateTime.now().toString().substring(0, 10);
-			setValue(value);
-
-			if(MPPDocT.get(getCtx(), value, get_TrxName()) != null)
-			{
-				log.saveError("Error", Msg.getMsg(getCtx(), "FillMandatory") +" "+ Msg.getElement(getCtx(), MPPDocT.COLUMNNAME_Value)) ;
-				return false;
-			}
-		}
-
-
 		//Rounding Production Qty
 		if(newRecord || is_ValueChanged(MPPDocT.COLUMNNAME_QtyEntered))
 		{

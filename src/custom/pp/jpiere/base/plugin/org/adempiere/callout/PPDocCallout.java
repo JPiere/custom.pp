@@ -14,6 +14,7 @@
 package custom.pp.jpiere.base.plugin.org.adempiere.callout;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Properties;
 
 import org.compiere.model.CalloutEngine;
@@ -23,7 +24,10 @@ import org.compiere.model.MLocator;
 import org.compiere.model.MProduct;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MUOMConversion;
+import org.compiere.util.Util;
 
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPDoc;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPFact;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlan;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanT;
 
@@ -57,6 +61,19 @@ public class PPDocCallout extends CalloutEngine {
 		{
 			MProduct m_Product = MProduct.get(M_Product_ID);
 
+			//Set Search Key
+			if(mTab.getTableName().equals(MPPDoc.Table_Name)
+					|| mTab.getTableName().equals(MPPPlanT.Table_Name) )
+			{
+				String searchkey = mTab.get_ValueAsString(MPPDoc.COLUMNNAME_Value);
+				if(Util.isEmpty(searchkey))
+				{
+					searchkey = m_Product.getValue() + "_" + LocalDateTime.now().toString().substring(0, 10);
+					mTab.setValue(MPPDoc.COLUMNNAME_Value, searchkey);
+				}
+			}
+
+
 			//For Display name to the Tree
 			if(mTab.getTableName().equals(MPPPlanT.Table_Name)
 					|| mTab.getTableName().equals(MPPPlan.Table_Name))
@@ -68,13 +85,18 @@ public class PPDocCallout extends CalloutEngine {
 			}
 
 			//Set Default Locator
-			if(mTab.getField("M_Locator_ID") != null && m_Product.getM_Locator_ID() != 0)
+			if(mTab.getTableName().equals(MPPPlanT.Table_Name)
+					|| mTab.getTableName().equals(MPPPlan.Table_Name)
+					|| mTab.getTableName().equals(MPPFact.Table_Name))
 			{
-				int AD_Org_ID = Integer.valueOf(mTab.get_ValueAsString("AD_Org_ID")).intValue();
-				MLocator m_Locator = MLocator.get(m_Product.getM_Locator_ID());
-				if(m_Locator.getAD_Org_ID() == AD_Org_ID)
+				if(mTab.getField("M_Locator_ID") != null && m_Product.getM_Locator_ID() != 0)
 				{
-					mTab.setValue("M_Locator_ID", m_Product.getM_Locator_ID());
+					int AD_Org_ID = Integer.valueOf(mTab.get_ValueAsString("AD_Org_ID")).intValue();
+					MLocator m_Locator = MLocator.get(m_Product.getM_Locator_ID());
+					if(m_Locator.getAD_Org_ID() == AD_Org_ID)
+					{
+						mTab.setValue("M_Locator_ID", m_Product.getM_Locator_ID());
+					}
 				}
 			}
 		}
