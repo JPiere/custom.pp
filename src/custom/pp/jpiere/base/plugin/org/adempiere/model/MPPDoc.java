@@ -83,6 +83,69 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 		}
 
 
+		//For Manual Entory JP_PP_Start
+		if(newRecord || is_ValueChanged(COLUMNNAME_JP_PP_Start))
+		{
+			if(!getDocStatus().equals(DOCSTATUS_Completed)
+					&& !getDocStatus().equals(DOCSTATUS_Closed)
+					&& !getDocStatus().equals(DOCSTATUS_Voided)
+					&& !getDocStatus().equals(DOCSTATUS_Reversed))
+			{
+				if(getJP_PP_Start() == null)
+				{
+					setJP_PP_StartProcess("N");
+					if(getJP_PP_End() == null)
+					{
+						setJP_PP_Status(JP_PP_STATUS_NotYetStarted);
+					}else {
+						setJP_PP_Status(JP_PP_STATUS_Completed);
+					}
+
+				}else {
+
+					setJP_PP_StartProcess("Y");
+					if(getJP_PP_End() == null)
+					{
+						setJP_PP_Status(JP_PP_STATUS_WorkInProgress);
+					}else {
+						setJP_PP_Status(JP_PP_STATUS_Completed);
+					}
+				}
+			}
+		}
+
+		//For Manual Entory JP_PP_End
+		if(newRecord || is_ValueChanged(COLUMNNAME_JP_PP_End))
+		{
+			if(!getDocStatus().equals(DOCSTATUS_Completed)
+					&& !getDocStatus().equals(DOCSTATUS_Closed)
+					&& !getDocStatus().equals(DOCSTATUS_Voided)
+					&& !getDocStatus().equals(DOCSTATUS_Reversed))
+			{
+
+				if(getJP_PP_End() == null)
+				{
+					setJP_PP_EndProcess("N");
+					if(getJP_PP_Start() == null)
+					{
+						setJP_PP_Status(JP_PP_STATUS_NotYetStarted);
+					}else {
+						setJP_PP_Status(JP_PP_STATUS_WorkInProgress);
+					}
+
+				}else {
+
+					setJP_PP_EndProcess("Y");
+					if(getJP_PP_Status().equals(JP_PP_STATUS_WorkInProgress)
+							|| getJP_PP_Status().equals(JP_PP_STATUS_NotYetStarted))
+					{
+						setJP_PP_Status(JP_PP_STATUS_Completed);
+					}
+				}
+			}
+		}
+
+
 		return true;
 	}
 
@@ -256,12 +319,12 @@ public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 		if (log.isLoggable(Level.INFO)) log.info(toString());
 		//
 
-		if(!getJP_PP_StartProcess().equals("Y"))
-		{
-			//Please perform PP Start Process before PP End process.
-			m_processMsg = Msg.getMsg(getCtx(), "JP_PP_RunEndProcessStartCheck");
-			return DocAction.STATUS_Invalid;
-		}
+//		if(!getJP_PP_StartProcess().equals("Y"))
+//		{
+//			//Please perform PP Start Process before PP End process.
+//			m_processMsg = Msg.getMsg(getCtx(), "JP_PP_RunEndProcessStartCheck");
+//			return DocAction.STATUS_Invalid;
+//		}
 
 		MPPPlan[] ppPlans = getPPPlans(true, null);
 		for(MPPPlan ppPlan : ppPlans)
