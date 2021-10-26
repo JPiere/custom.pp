@@ -33,7 +33,7 @@ public class X_JP_PP_PlanLineT extends PO implements I_JP_PP_PlanLineT, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20210923L;
+	private static final long serialVersionUID = 20211026L;
 
     /** Standard Constructor */
     public X_JP_PP_PlanLineT (Properties ctx, int JP_PP_PlanLineT_ID, String trxName)
@@ -55,6 +55,8 @@ public class X_JP_PP_PlanLineT extends PO implements I_JP_PP_PlanLineT, I_Persis
 // N
 			setLine (0);
 // @SQL=SELECT NVL(MAX(Line),0)+10 AS DefaultValue FROM JP_PP_PlanLineT WHERE JP_PP_PlanT_ID=@JP_PP_PlanT_ID@
+			setM_AttributeSetInstance_ID (0);
+// 0
 			setM_Locator_ID (0);
 // @M_Locator_ID@
 			setM_Product_ID (0);
@@ -174,10 +176,10 @@ public class X_JP_PP_PlanLineT extends PO implements I_JP_PP_PlanLineT, I_Persis
 
 	/** IsCreated AD_Reference_ID=319 */
 	public static final int ISCREATED_AD_Reference_ID=319;
-	/** Yes = Y */
-	public static final String ISCREATED_Yes = "Y";
 	/** No = N */
 	public static final String ISCREATED_No = "N";
+	/** Yes = Y */
+	public static final String ISCREATED_Yes = "Y";
 	/** Set Records created.
 		@param IsCreated Records created	  */
 	public void setIsCreated (String IsCreated)
@@ -347,6 +349,34 @@ public class X_JP_PP_PlanLineT extends PO implements I_JP_PP_PlanLineT, I_Persis
 	public int getLine () 
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_Line);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public I_M_AttributeSetInstance getM_AttributeSetInstance() throws RuntimeException
+    {
+		return (I_M_AttributeSetInstance)MTable.get(getCtx(), I_M_AttributeSetInstance.Table_Name)
+			.getPO(getM_AttributeSetInstance_ID(), get_TrxName());	}
+
+	/** Set Attribute Info.
+		@param M_AttributeSetInstance_ID 
+		Product Attribute Set Instance
+	  */
+	public void setM_AttributeSetInstance_ID (int M_AttributeSetInstance_ID)
+	{
+		if (M_AttributeSetInstance_ID < 0) 
+			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, null);
+		else 
+			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, Integer.valueOf(M_AttributeSetInstance_ID));
+	}
+
+	/** Get Attribute Info.
+		@return Product Attribute Set Instance
+	  */
+	public int getM_AttributeSetInstance_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_M_AttributeSetInstance_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();

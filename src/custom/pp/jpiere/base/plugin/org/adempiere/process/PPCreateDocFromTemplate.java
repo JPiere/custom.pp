@@ -477,6 +477,7 @@ public class PPCreateDocFromTemplate extends SvrProcess {
 			ppPlanLine.setJP_PP_PlanLineT_ID(ppPlanLineT.getJP_PP_PlanLineT_ID());
 			ppPlanLine.setLine(ppPlanLineT.getLine());
 			ppPlanLine.setM_Product_ID(ppPlanLineT.getM_Product_ID());
+			ppPlanLine.setM_AttributeSetInstance_ID(ppPlanLineT.getM_AttributeSetInstance_ID());
 			ppPlanLine.setIsEndProduct(ppPlanLineT.isEndProduct());
 			ppPlanLine.setPlannedQty(p_CoefficientQty.multiply(ppPlanLineT.getPlannedQty()));
 			ppPlanLine.setC_UOM_ID(ppPlanLineT.getC_UOM_ID());

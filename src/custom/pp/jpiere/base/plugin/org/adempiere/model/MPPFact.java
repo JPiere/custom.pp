@@ -1303,6 +1303,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			ppFLine.setLine(ppPLine.getLine());
 			ppFLine.setAD_Org_ID(getAD_Org_ID());
 			ppFLine.setM_Product_ID(ppPLine.getM_Product_ID());
+			ppFLine.setM_AttributeSetInstance_ID(ppPLine.getM_AttributeSetInstance_ID());
 			ppFLine.setIsEndProduct(ppPLine.isEndProduct());
 			ppFLine.setC_UOM_ID(ppPLine.getC_UOM_ID());
 			if(ppPLine.isEndProduct())

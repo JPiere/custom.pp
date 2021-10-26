@@ -31,7 +31,7 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20210923L;
+	private static final long serialVersionUID = 20211026L;
 
     /** Standard Constructor */
     public X_JP_PP_PlanLineTQT (Properties ctx, int JP_PP_PlanLineTQT_ID, String trxName)
