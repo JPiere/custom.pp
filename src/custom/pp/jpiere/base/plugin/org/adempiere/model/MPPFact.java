@@ -778,6 +778,14 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 														+ " - "+ doc.getProcessMsg();
 						return DocAction.STATUS_Invalid;
 					}
+					
+					if(!pp.save(get_TrxName()))
+					{
+						m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
+														+ " - "+ pp.get_ValueAsString(COLUMNNAME_DocumentNo);
+									return DOCSTATUS_Invalid;
+					}					
+					
 				} catch (Exception e) {
 
 					m_processMsg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
