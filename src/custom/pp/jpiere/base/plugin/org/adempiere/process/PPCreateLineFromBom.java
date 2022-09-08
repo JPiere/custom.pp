@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.compiere.model.MProduct;
-import org.compiere.model.MProductBOM;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
@@ -29,6 +28,8 @@ import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
+import org.eevolution.model.MPPProductBOM;
+import org.eevolution.model.MPPProductBOMLine;
 
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPFact;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPFactLine;
@@ -52,6 +53,7 @@ public class PPCreateLineFromBom extends SvrProcess {
 	private MTable m_Table = null;
 	private boolean p_Recreate = true;
 	private BigDecimal p_ProductionQty = Env.ZERO;
+	private int p_PP_Product_BOM_ID = 0;
 
 	@Override
 	protected void prepare()
@@ -64,6 +66,8 @@ public class PPCreateLineFromBom extends SvrProcess {
 				p_Recreate = para[i].getParameterAsBoolean();
 			else if ("ProductionQty".equals(name))
 				p_ProductionQty  = (BigDecimal) para[i].getParameter();
+			else if ("PP_Product_BOM_ID".equals(name))
+				p_PP_Product_BOM_ID  =  para[i].getParameterAsInt();
 			else
 				log.log(Level.SEVERE, "Unknown Parameter: " + name);
 		}
@@ -147,21 +151,29 @@ public class PPCreateLineFromBom extends SvrProcess {
 		poLine.saveEx(get_TrxName());
 
 		//lines of Bom
-		MProductBOM[] boms =MProductBOM.getBOMLines(product);
-		for(MProductBOM bom : boms)
+		MPPProductBOM bom = null;
+		if(p_PP_Product_BOM_ID == 0)
+			bom = MPPProductBOM.getDefault(product, get_TrxName());
+		else
+			bom = new MPPProductBOM(getCtx(),p_PP_Product_BOM_ID,get_TrxName());
+					
+		if(bom != null)
 		{
-			line = line + 10;
-			poLine = createLine(po);
-			poLine.setAD_Org_ID(po.getAD_Org_ID());
-			poLine.set_ValueNoCheck("Line", line);
-			poLine.set_ValueNoCheck("M_Product_ID", bom.getM_ProductBOM_ID());
-			poLine.set_ValueNoCheck("M_Locator_ID", po.get_Value("M_Locator_ID"));
-			poLine.set_ValueNoCheck("IsEndProduct",false);
-			poLine.set_ValueNoCheck("PlannedQty", p_ProductionQty.multiply(bom.getBOMQty()));
-			poLine.set_ValueNoCheck("QtyUsed", p_ProductionQty.multiply(bom.getBOMQty()));
-			poLine.set_ValueNoCheck("MovementQty",p_ProductionQty.multiply(bom.getBOMQty()).negate());
-			poLine.set_ValueNoCheck("IsCreated", "N");
-			poLine.saveEx(get_TrxName());
+			for(MPPProductBOMLine bomLine : bom.getLines())
+			{
+				line = line + 10;
+				poLine = createLine(po);
+				poLine.setAD_Org_ID(po.getAD_Org_ID());
+				poLine.set_ValueNoCheck("Line", line);
+					poLine.set_ValueNoCheck("M_Product_ID", bomLine.getM_Product_ID());
+				poLine.set_ValueNoCheck("M_Locator_ID", po.get_Value("M_Locator_ID"));
+				poLine.set_ValueNoCheck("IsEndProduct",false);
+					poLine.set_ValueNoCheck("PlannedQty", p_ProductionQty.multiply(bomLine.getQtyBOM()));
+					poLine.set_ValueNoCheck("QtyUsed", p_ProductionQty.multiply(bomLine.getQtyBOM()));
+					poLine.set_ValueNoCheck("MovementQty",p_ProductionQty.multiply(bomLine.getQtyBOM()).negate());
+				poLine.set_ValueNoCheck("IsCreated", "N");
+				poLine.saveEx(get_TrxName());
+		}
 		}
 
 		return "@Success@";
