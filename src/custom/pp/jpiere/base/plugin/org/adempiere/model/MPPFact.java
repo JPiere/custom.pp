@@ -519,7 +519,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			MProduct product = MProduct.get(line.getM_Product_ID());
 			if (line.getM_AttributeSetInstance_ID() == 0)
 			{
-				if (product != null && product.isASIMandatory(true))
+				if (product != null && product.isASIMandatoryFor(null,true))
 				{
 					if (product.getAttributeSet() != null && !product.getAttributeSet().excludeTableEntry(MProductionLine.Table_ID, true))
 					{
