@@ -711,6 +711,11 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				pp.set_ValueNoCheck(I_M_Production.COLUMNNAME_DocStatus , DocAction.STATUS_Drafted);
 				pp.set_ValueNoCheck(I_M_Production.COLUMNNAME_DocAction, DocAction.ACTION_Complete);
 
+				//IDEMPIERE-5746 & JPIERE-0606
+				MDocType ppFact_DocType = MDocType.get(getC_DocType_ID());
+				if(ppFact_DocType.get_ValueAsInt("JP_ProductionDocType_ID") > 0)
+					pp.set_ValueNoCheck("C_DocType_ID", ppFact_DocType.get_ValueAsInt("JP_ProductionDocType_ID"));
+				
 				if(!pp.save(get_TrxName()))
 				{
 					m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_M_Production_ID)
