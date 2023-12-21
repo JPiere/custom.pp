@@ -26,7 +26,9 @@ import org.compiere.wf.MWFActivity;
 import org.compiere.wf.MWFProcess;
 
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPFact;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPMMPlanLine;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlan;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPWorkProcess;
 
 
 /**
@@ -51,7 +53,6 @@ public class PPFactProcessAfterComplete extends SvrProcess {
 		String msg = "@OK@";
 
 		MPPFact ppFact = new MPPFact(getCtx(), p_JP_PP_Fact_ID, get_TrxName());
-
 		if(!ppFact.getDocStatus().equals(DocAction.STATUS_Completed))
 		{
 			msg = Msg.getMsg(getCtx(),"JP_Not_Completed_Document");
@@ -60,59 +61,86 @@ public class PPFactProcessAfterComplete extends SvrProcess {
 		}
 
 		MPPPlan parent = ppFact.getParent();
-
-		if(parent.getJP_ProductionQtyFact().compareTo(parent.getProductionQty()) >= 0 )
+		boolean isCompleteAutoJP = parent.isCompleteAutoJP();
+		boolean isSplitWhenDifferenceJP = parent.isSplitWhenDifferenceJP();
+		String JP_PP_WorkProcessType = parent.getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType))
 		{
-			if(parent.isCompleteAutoJP())
+			if(isCompleteAutoJP)
 			{
-				MPPFact[] ppFacts = parent.getPPFacts(true, null);
-				for(MPPFact fact : ppFacts)
+				isCompleteAutoJP = parent.getJP_ProductionQtyFact().compareTo(parent.getProductionQty()) >= 0;
+			}
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			MPPMMPlanLine[] m_PPMMLines = parent.getPPMMPlanLines();
+			boolean isDiff = false;
+			for(MPPMMPlanLine m_PPMMLine: m_PPMMLines)
+			{
+				if(m_PPMMLine.getMovementQty().compareTo(m_PPMMLine.getJP_MovementQtyFact()) > 0)
 				{
-					if(!fact.isProcessed())
-					{
-						//You cannot be completed PP Plan because there is an unprocessed PP Fact.
-						msg = Msg.getMsg(getCtx(), "JP_PP_NotCompletePPPlanForUnprocessedPPFact");
-						addLog(msg);
-
-						return msg;
-					}
+					isDiff = true;
+					continue;
 				}
+			}
+			
+			if(isDiff)
+			{
+				isCompleteAutoJP = false;
+				
+			}
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType)) {
+			
+			isSplitWhenDifferenceJP = false;
+			
+		}
 
-				String wfStatus = MWFActivity.getActiveInfo(Env.getCtx(), MPPPlan.Table_ID, parent.getJP_PP_Plan_ID());
-				if (Util.isEmpty(wfStatus))
+		if(isCompleteAutoJP)
+		{
+			MPPFact[] ppFacts = parent.getPPFacts(true, null);
+			for(MPPFact fact : ppFacts)
+			{
+				if(!fact.isProcessed())
 				{
-					ProcessInfo pInfo = getProcessInfo();
-					pInfo.setPO(parent);
-					pInfo.setRecord_ID(parent.getJP_PP_Plan_ID());
-					pInfo.setTable_ID(MPPPlan.Table_ID);
-					MColumn docActionColumn = MColumn.get(getCtx(), MPPPlan.Table_Name, MPPPlan.COLUMNNAME_DocAction);
-					MProcess process = MProcess.get(docActionColumn.getAD_Process_ID());
-					MWFProcess wfProcess = ProcessUtil.startWorkFlow(Env.getCtx(), pInfo, process.getAD_Workflow_ID());
-					if(wfProcess.getWFState().equals(MWFProcess.WFSTATE_Terminated))
-					{
-						msg = wfProcess.getTextMsg();
-						addLog(msg);
-					}
-
-					return msg;
-
-				}else {
-
-					//Active Workflow for this Record exists (complete first):
-					msg = Msg.getMsg(getCtx(), "WFActiveForRecord");
+					//You cannot be completed PP Plan because there is an unprocessed PP Fact.
+					msg = Msg.getMsg(getCtx(), "JP_PP_NotCompletePPPlanForUnprocessedPPFact");
 					addLog(msg);
 
 					return msg;
 				}
+			}
+
+			String wfStatus = MWFActivity.getActiveInfo(Env.getCtx(), MPPPlan.Table_ID, parent.getJP_PP_Plan_ID());
+			if (Util.isEmpty(wfStatus))
+			{
+				ProcessInfo pInfo = getProcessInfo();
+				pInfo.setPO(parent);
+				pInfo.setRecord_ID(parent.getJP_PP_Plan_ID());
+				pInfo.setTable_ID(MPPPlan.Table_ID);
+				MColumn docActionColumn = MColumn.get(getCtx(), MPPPlan.Table_Name, MPPPlan.COLUMNNAME_DocAction);
+				MProcess process = MProcess.get(docActionColumn.getAD_Process_ID());
+				MWFProcess wfProcess = ProcessUtil.startWorkFlow(Env.getCtx(), pInfo, process.getAD_Workflow_ID());
+				if(wfProcess.getWFState().equals(MWFProcess.WFSTATE_Terminated))
+				{
+					msg = wfProcess.getTextMsg();
+					addLog(msg);
+				}
+
+				return msg;
 
 			}else {
 
-				;//Noting to do
+				//Active Workflow for this Record exists (complete first):
+				msg = Msg.getMsg(getCtx(), "WFActiveForRecord");
+				addLog(msg);
+
+				return msg;
 			}
 
 		}else {
 
-			if(parent.isSplitWhenDifferenceJP())
+			if(isSplitWhenDifferenceJP)
 			{
 				msg = parent.createFact(get_TrxName());
 				if(!Util.isEmpty(msg))

@@ -26,11 +26,14 @@ import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
+import org.compiere.util.Util;
 
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPDocT;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPMMPlanLineT;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanLineT;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanLineTQT;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanT;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPWorkProcess;
 
 
 /**
@@ -82,8 +85,10 @@ public class PPCreateTemplateByCopy extends SvrProcess {
 
 		MPPPlanT[] ppPlanT_Froms = m_PPDocT_From.getPPPlanTs();
 		MPPPlanLineT[] ppPlanLineT_Froms = null;
+		MPPMMPlanLineT[] ppMMPlanLineT_Froms = null;
 		MPPPlanT ppPlanT_To = null;
 		MPPPlanLineT ppPlanLineT_To = null;
+		MPPMMPlanLineT ppMMPlanLineT_To = null;
 
 		int M_Locator_ID = 0;
 		for(MPPPlanT ppPlanT_From : ppPlanT_Froms)
@@ -104,6 +109,8 @@ public class PPCreateTemplateByCopy extends SvrProcess {
 			ppPlanT_To.setSeqNo(ppPlanT_From.getSeqNo());
 			ppPlanT_To.setIsActive(true);
 			ppPlanT_To.setIsSummary(ppPlanT_From.isSummary());
+			ppPlanT_To.setJP_PP_WorkProcess_ID(ppPlanT_From.getJP_PP_WorkProcess_ID());
+			ppPlanT_To.setJP_PP_WorkProcessType(ppPlanT_From.getJP_PP_WorkProcessType());
 			ppPlanT_To.setM_Product_ID(ppPlanT_From.getM_Product_ID());
 			if(m_PPDocT_To.getAD_Org_ID() == ppPlanT_From.getAD_Org_ID())
 			{
@@ -170,66 +177,96 @@ public class PPCreateTemplateByCopy extends SvrProcess {
 			ppPlanT_To.setJP_Processing5("N");
 			ppPlanT_To.setJP_Processing6("N");
 
-			ppPlanLineT_Froms = ppPlanT_From.getPPPlanLineTs();
-			if(ppPlanLineT_Froms.length > 0)
-				ppPlanT_To.setIsCreated("Y");
-			else
-				ppPlanT_To.setIsCreated("N");
-			ppPlanT_To.saveEx(get_TrxName());
-
-			for(MPPPlanLineT ppPlanLineT_From : ppPlanLineT_Froms)
+			String JP_PP_WorkProcessType = ppPlanT_From.getJP_PP_WorkProcessType();
+			
+			if(Util.isEmpty(JP_PP_WorkProcessType) 
+					|| MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType))
 			{
-				ppPlanLineT_To = new MPPPlanLineT(getCtx(), 0, get_TrxName());
-				PO.copyValues(ppPlanLineT_From, ppPlanLineT_To);
-
-				//Copy mandatory column to make sure
-				ppPlanLineT_To.setJP_PP_PlanT_ID(ppPlanT_To.getJP_PP_PlanT_ID()) ;
-				ppPlanLineT_To.setAD_Org_ID(m_PPDocT_To.getAD_Org_ID());
-				ppPlanLineT_To.setLine(ppPlanLineT_From.getLine());
-				ppPlanLineT_To.setM_Product_ID(ppPlanLineT_From.getM_Product_ID());
-				ppPlanLineT_To.setM_AttributeSetInstance_ID(ppPlanLineT_From.getM_AttributeSetInstance_ID());
-				ppPlanLineT_To.setC_UOM_ID(ppPlanLineT_From.getC_UOM_ID());
-				ppPlanLineT_To.setIsEndProduct(ppPlanLineT_From.isEndProduct());
-				ppPlanLineT_To.setIsCreated("Y");
-				ppPlanLineT_To.setPlannedQty(p_CoefficientQty.multiply(ppPlanLineT_From.getPlannedQty()));
-				if(ppPlanLineT_To.isEndProduct())
-					ppPlanLineT_To.setQtyUsed(null);
+				ppPlanLineT_Froms = ppPlanT_From.getPPPlanLineTs();
+				if(ppPlanLineT_Froms.length > 0)
+					ppPlanT_To.setIsCreated("Y");
 				else
-					ppPlanLineT_To.setQtyUsed(p_CoefficientQty.multiply(ppPlanLineT_From.getQtyUsed()));
-				ppPlanLineT_To.setMovementQty(p_CoefficientQty.multiply(ppPlanLineT_From.getMovementQty()));
-				if(m_PPDocT_To.getAD_Org_ID() == ppPlanT_From.getAD_Org_ID())
+					ppPlanT_To.setIsCreated("N");
+				ppPlanT_To.saveEx(get_TrxName());
+	
+				for(MPPPlanLineT ppPlanLineT_From : ppPlanLineT_Froms)
 				{
-					ppPlanLineT_To.setM_Locator_ID(ppPlanLineT_From.getM_Locator_ID());
-				}else {
-					ppPlanLineT_To.setM_Locator_ID(M_Locator_ID);
-				}
-
-				ppPlanLineT_To.setJP_Processing1("N");
-				ppPlanLineT_To.setJP_Processing2("N");
-				ppPlanLineT_To.setJP_Processing3("N");
-				ppPlanLineT_To.saveEx(get_TrxName());
-
-				//QT
-				if(ppPlanLineT_To.isEndProduct())
-				{
-					MPPPlanLineTQT[] qts_From = ppPlanLineT_From.getPPPlanLineTQTs(true, null);
-					MPPPlanLineTQT qt_To = null;
-					for(MPPPlanLineTQT qt_From :qts_From)
+					ppPlanLineT_To = new MPPPlanLineT(getCtx(), 0, get_TrxName());
+					PO.copyValues(ppPlanLineT_From, ppPlanLineT_To);
+	
+					//Copy mandatory column to make sure
+					ppPlanLineT_To.setJP_PP_PlanT_ID(ppPlanT_To.getJP_PP_PlanT_ID()) ;
+					ppPlanLineT_To.setAD_Org_ID(m_PPDocT_To.getAD_Org_ID());
+					ppPlanLineT_To.setLine(ppPlanLineT_From.getLine());
+					ppPlanLineT_To.setM_Product_ID(ppPlanLineT_From.getM_Product_ID());
+					ppPlanLineT_To.setM_AttributeSetInstance_ID(ppPlanLineT_From.getM_AttributeSetInstance_ID());
+					ppPlanLineT_To.setC_UOM_ID(ppPlanLineT_From.getC_UOM_ID());
+					ppPlanLineT_To.setIsEndProduct(ppPlanLineT_From.isEndProduct());
+					ppPlanLineT_To.setIsCreated("Y");
+					ppPlanLineT_To.setPlannedQty(p_CoefficientQty.multiply(ppPlanLineT_From.getPlannedQty()));
+					if(ppPlanLineT_To.isEndProduct())
+						ppPlanLineT_To.setQtyUsed(null);
+					else
+						ppPlanLineT_To.setQtyUsed(p_CoefficientQty.multiply(ppPlanLineT_From.getQtyUsed()));
+					ppPlanLineT_To.setMovementQty(p_CoefficientQty.multiply(ppPlanLineT_From.getMovementQty()));
+					if(m_PPDocT_To.getAD_Org_ID() == ppPlanT_From.getAD_Org_ID())
 					{
-						qt_To = new MPPPlanLineTQT(getCtx(), 0 , get_TrxName());
-						PO.copyValues(qt_From, qt_To);
-						qt_To.setJP_PP_PlanLineT_ID(ppPlanLineT_To.getJP_PP_PlanLineT_ID());
-						qt_To.setAD_Org_ID(ppPlanLineT_To.getAD_Org_ID());
-						qt_To.setSeqNo(qt_From.getSeqNo());
-						qt_To.setM_QualityTest_ID(qt_From.getM_QualityTest_ID());
-						qt_To.setExpectedResult(qt_From.getExpectedResult());
-						qt_To.setIsActive(true);
-						qt_To.saveEx(get_TrxName());
+						ppPlanLineT_To.setM_Locator_ID(ppPlanLineT_From.getM_Locator_ID());
+					}else {
+						ppPlanLineT_To.setM_Locator_ID(M_Locator_ID);
 					}
+	
+					ppPlanLineT_To.setJP_Processing1("N");
+					ppPlanLineT_To.setJP_Processing2("N");
+					ppPlanLineT_To.setJP_Processing3("N");
+					ppPlanLineT_To.saveEx(get_TrxName());
+	
+					//QT
+					if(ppPlanLineT_To.isEndProduct())
+					{
+						MPPPlanLineTQT[] qts_From = ppPlanLineT_From.getPPPlanLineTQTs(true, null);
+						MPPPlanLineTQT qt_To = null;
+						for(MPPPlanLineTQT qt_From :qts_From)
+						{
+							qt_To = new MPPPlanLineTQT(getCtx(), 0 , get_TrxName());
+							PO.copyValues(qt_From, qt_To);
+							qt_To.setJP_PP_PlanLineT_ID(ppPlanLineT_To.getJP_PP_PlanLineT_ID());
+							qt_To.setAD_Org_ID(ppPlanLineT_To.getAD_Org_ID());
+							qt_To.setSeqNo(qt_From.getSeqNo());
+							qt_To.setM_QualityTest_ID(qt_From.getM_QualityTest_ID());
+							qt_To.setExpectedResult(qt_From.getExpectedResult());
+							qt_To.setIsActive(true);
+							qt_To.saveEx(get_TrxName());
+						}
+					}
+				}//for
+				
+			}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+				
+				ppPlanT_To.saveEx(get_TrxName());
+				
+				ppMMPlanLineT_Froms = ppPlanT_From.getPPMMPlanLineTs();
+				for(MPPMMPlanLineT ppMMPlanLineT_From : ppMMPlanLineT_Froms)
+				{
+					ppMMPlanLineT_To = new MPPMMPlanLineT(getCtx(), 0, get_TrxName());
+					PO.copyValues(ppMMPlanLineT_From, ppMMPlanLineT_To);
+	
+					//Copy mandatory column to make sure
+					ppMMPlanLineT_To.setJP_PP_PlanT_ID(ppPlanT_To.getJP_PP_PlanT_ID()) ;
+					ppMMPlanLineT_To.setAD_Org_ID(m_PPDocT_To.getAD_Org_ID());
+					ppMMPlanLineT_To.setLine(ppMMPlanLineT_From.getLine());
+					ppMMPlanLineT_To.setM_Product_ID(ppMMPlanLineT_From.getM_Product_ID());
+					ppMMPlanLineT_To.setM_Locator_ID(ppMMPlanLineT_From.getM_Locator_ID());
+					ppMMPlanLineT_To.setM_LocatorTo_ID(ppMMPlanLineT_From.getM_LocatorTo_ID());
+					ppMMPlanLineT_To.setM_AttributeSetInstance_ID(ppMMPlanLineT_From.getM_AttributeSetInstance_ID());
+					ppMMPlanLineT_To.setM_AttributeSetInstanceTo_ID(ppMMPlanLineT_From.getM_AttributeSetInstanceTo_ID());
+					ppMMPlanLineT_To.setMovementQty(p_CoefficientQty.multiply(ppMMPlanLineT_From.getMovementQty()));
+					ppMMPlanLineT_To.saveEx(get_TrxName());
 				}
+				
 			}
-
-		}
+			
+		}//for
 
 		//Update Tree
 		int p_AD_TreeFrom_ID = MTree.getDefaultAD_Tree_ID(getAD_Client_ID(), "JP_PP_PlanT_ID");

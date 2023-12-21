@@ -23,7 +23,7 @@ import org.compiere.util.KeyNamePair;
 
 /** Generated Interface for JP_PP_PlanT
  *  @author iDempiere (generated) 
- *  @version Release 8.2
+ *  @version Release 10
  */
 @SuppressWarnings("all")
 public interface I_JP_PP_PlanT 
@@ -46,8 +46,8 @@ public interface I_JP_PP_PlanT
     /** Column name AD_Client_ID */
     public static final String COLUMNNAME_AD_Client_ID = "AD_Client_ID";
 
-	/** Get Client.
-	  * Client/Tenant for this installation.
+	/** Get Tenant.
+	  * Tenant for this installation.
 	  */
 	public int getAD_Client_ID();
 
@@ -68,12 +68,12 @@ public interface I_JP_PP_PlanT
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
 
 	/** Set Organization.
-	  * Organizational entity within client
+	  * Organizational entity within tenant
 	  */
 	public void setAD_Org_ID (int AD_Org_ID);
 
 	/** Get Organization.
-	  * Organizational entity within client
+	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
 
@@ -292,6 +292,15 @@ public interface I_JP_PP_PlanT
 	/** Get Records created	  */
 	public String getIsCreated();
 
+    /** Column name IsRecordRouteJP */
+    public static final String COLUMNNAME_IsRecordRouteJP = "IsRecordRouteJP";
+
+	/** Set Record the Route	  */
+	public void setIsRecordRouteJP (boolean IsRecordRouteJP);
+
+	/** Get Record the Route	  */
+	public boolean isRecordRouteJP();
+
     /** Column name IsSplitWhenDifferenceJP */
     public static final String COLUMNNAME_IsSplitWhenDifferenceJP = "IsSplitWhenDifferenceJP";
 
@@ -395,6 +404,34 @@ public interface I_JP_PP_PlanT
 	/** Get Scheduled Start Time	  */
 	public Timestamp getJP_PP_ScheduledStartTime();
 
+    /** Column name JP_PP_WorkProcessType */
+    public static final String COLUMNNAME_JP_PP_WorkProcessType = "JP_PP_WorkProcessType";
+
+	/** Set Work Process Type.
+	  * JPIERE-0609:JPBP
+	  */
+	public void setJP_PP_WorkProcessType (String JP_PP_WorkProcessType);
+
+	/** Get Work Process Type.
+	  * JPIERE-0609:JPBP
+	  */
+	public String getJP_PP_WorkProcessType();
+
+    /** Column name JP_PP_WorkProcess_ID */
+    public static final String COLUMNNAME_JP_PP_WorkProcess_ID = "JP_PP_WorkProcess_ID";
+
+	/** Set Work Process.
+	  * JPIERE-0609:JPBP
+	  */
+	public void setJP_PP_WorkProcess_ID (int JP_PP_WorkProcess_ID);
+
+	/** Get Work Process.
+	  * JPIERE-0609:JPBP
+	  */
+	public int getJP_PP_WorkProcess_ID();
+
+	public I_JP_PP_WorkProcess getJP_PP_WorkProcess() throws RuntimeException;
+
     /** Column name JP_PP_Workload_Plan */
     public static final String COLUMNNAME_JP_PP_Workload_Plan = "JP_PP_Workload_Plan";
 
@@ -414,6 +451,50 @@ public interface I_JP_PP_PlanT
 	public int getJP_PP_Workload_UOM_ID();
 
 	public org.compiere.model.I_C_UOM getJP_PP_Workload_UOM() throws RuntimeException;
+
+    /** Column name JP_PhysicalWarehouseDst_ID */
+    public static final String COLUMNNAME_JP_PhysicalWarehouseDst_ID = "JP_PhysicalWarehouseDst_ID";
+
+	/** Set Physical Warehouse(Destination)	  */
+	public void setJP_PhysicalWarehouseDst_ID (int JP_PhysicalWarehouseDst_ID);
+
+	/** Get Physical Warehouse(Destination)	  */
+	public int getJP_PhysicalWarehouseDst_ID();
+
+	public I_JP_PhysicalWarehouse getJP_PhysicalWarehouseDst() throws RuntimeException;
+
+    /** Column name JP_PhysicalWarehouseFrom_ID */
+    public static final String COLUMNNAME_JP_PhysicalWarehouseFrom_ID = "JP_PhysicalWarehouseFrom_ID";
+
+	/** Set Physical Warehouse(From)	  */
+	public void setJP_PhysicalWarehouseFrom_ID (int JP_PhysicalWarehouseFrom_ID);
+
+	/** Get Physical Warehouse(From)	  */
+	public int getJP_PhysicalWarehouseFrom_ID();
+
+	public I_JP_PhysicalWarehouse getJP_PhysicalWarehouseFrom() throws RuntimeException;
+
+    /** Column name JP_PhysicalWarehouseNext_ID */
+    public static final String COLUMNNAME_JP_PhysicalWarehouseNext_ID = "JP_PhysicalWarehouseNext_ID";
+
+	/** Set Physical Warehouse(Next)	  */
+	public void setJP_PhysicalWarehouseNext_ID (int JP_PhysicalWarehouseNext_ID);
+
+	/** Get Physical Warehouse(Next)	  */
+	public int getJP_PhysicalWarehouseNext_ID();
+
+	public I_JP_PhysicalWarehouse getJP_PhysicalWarehouseNext() throws RuntimeException;
+
+    /** Column name JP_PhysicalWarehouseTo_ID */
+    public static final String COLUMNNAME_JP_PhysicalWarehouseTo_ID = "JP_PhysicalWarehouseTo_ID";
+
+	/** Set Physical Warehouse(To)	  */
+	public void setJP_PhysicalWarehouseTo_ID (int JP_PhysicalWarehouseTo_ID);
+
+	/** Get Physical Warehouse(To)	  */
+	public int getJP_PhysicalWarehouseTo_ID();
+
+	public I_JP_PhysicalWarehouse getJP_PhysicalWarehouseTo() throws RuntimeException;
 
     /** Column name JP_Processing1 */
     public static final String COLUMNNAME_JP_Processing1 = "JP_Processing1";
@@ -503,6 +584,58 @@ public interface I_JP_PP_PlanT
 	  * JPIERE-0490:JPBP
 	  */
 	public String getJP_Subject();
+
+    /** Column name JP_WarehouseDst_ID */
+    public static final String COLUMNNAME_JP_WarehouseDst_ID = "JP_WarehouseDst_ID";
+
+	/** Set Org Warehouse(Destination)	  */
+	public void setJP_WarehouseDst_ID (int JP_WarehouseDst_ID);
+
+	/** Get Org Warehouse(Destination)	  */
+	public int getJP_WarehouseDst_ID();
+
+	public org.compiere.model.I_M_Warehouse getJP_WarehouseDst() throws RuntimeException;
+
+    /** Column name JP_WarehouseFrom_ID */
+    public static final String COLUMNNAME_JP_WarehouseFrom_ID = "JP_WarehouseFrom_ID";
+
+	/** Set Org Warehouse(From).
+	  * Storage Warehouse and Service Point
+	  */
+	public void setJP_WarehouseFrom_ID (int JP_WarehouseFrom_ID);
+
+	/** Get Org Warehouse(From).
+	  * Storage Warehouse and Service Point
+	  */
+	public int getJP_WarehouseFrom_ID();
+
+	public org.compiere.model.I_M_Warehouse getJP_WarehouseFrom() throws RuntimeException;
+
+    /** Column name JP_WarehouseNext_ID */
+    public static final String COLUMNNAME_JP_WarehouseNext_ID = "JP_WarehouseNext_ID";
+
+	/** Set Org Warehouse(Next)	  */
+	public void setJP_WarehouseNext_ID (int JP_WarehouseNext_ID);
+
+	/** Get Org Warehouse(Next)	  */
+	public int getJP_WarehouseNext_ID();
+
+	public org.compiere.model.I_M_Warehouse getJP_WarehouseNext() throws RuntimeException;
+
+    /** Column name JP_WarehouseTo_ID */
+    public static final String COLUMNNAME_JP_WarehouseTo_ID = "JP_WarehouseTo_ID";
+
+	/** Set Org Warehouse(To).
+	  * Storage Warehouse and Service Point
+	  */
+	public void setJP_WarehouseTo_ID (int JP_WarehouseTo_ID);
+
+	/** Get Org Warehouse(To).
+	  * Storage Warehouse and Service Point
+	  */
+	public int getJP_WarehouseTo_ID();
+
+	public org.compiere.model.I_M_Warehouse getJP_WarehouseTo() throws RuntimeException;
 
     /** Column name M_Locator_ID */
     public static final String COLUMNNAME_M_Locator_ID = "M_Locator_ID";

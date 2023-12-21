@@ -24,19 +24,39 @@ import org.compiere.util.KeyNamePair;
 
 /** Generated Model for JP_PP_FactLineQT
  *  @author iDempiere (generated) 
- *  @version Release 8.2 - $Id$ */
+ *  @version Release 10 - $Id$ */
+@org.adempiere.base.Model(table="JP_PP_FactLineQT")
 public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Persistent 
 {
 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20210923L;
+	private static final long serialVersionUID = 20231221L;
 
     /** Standard Constructor */
     public X_JP_PP_FactLineQT (Properties ctx, int JP_PP_FactLineQT_ID, String trxName)
     {
       super (ctx, JP_PP_FactLineQT_ID, trxName);
+      /** if (JP_PP_FactLineQT_ID == 0)
+        {
+			setExpectedResult (null);
+			setIsQCPass (false);
+// N
+			setJP_PP_FactLineQT_ID (0);
+			setJP_PP_FactLine_ID (0);
+			setM_QualityTest_ID (0);
+			setProcessed (false);
+// N
+			setSeqNo (0);
+// @SQL=SELECT COALESCE(MAX(SeqNo),0)+10 AS DefaultValue FROM JP_PP_FactLineQT WHERE JP_PP_FactLine_ID=@JP_PP_FactLine_ID@
+        } */
+    }
+
+    /** Standard Constructor */
+    public X_JP_PP_FactLineQT (Properties ctx, int JP_PP_FactLineQT_ID, String trxName, String ... virtualColumns)
+    {
+      super (ctx, JP_PP_FactLineQT_ID, trxName, virtualColumns);
       /** if (JP_PP_FactLineQT_ID == 0)
         {
 			setExpectedResult (null);
@@ -81,7 +101,8 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
     }
 
 	/** Set Expected Result.
-		@param ExpectedResult Expected Result	  */
+		@param ExpectedResult Expected Result
+	*/
 	public void setExpectedResult (String ExpectedResult)
 	{
 		set_Value (COLUMNNAME_ExpectedResult, ExpectedResult);
@@ -89,13 +110,14 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 
 	/** Get Expected Result.
 		@return Expected Result	  */
-	public String getExpectedResult () 
+	public String getExpectedResult()
 	{
 		return (String)get_Value(COLUMNNAME_ExpectedResult);
 	}
 
 	/** Set QC Pass.
-		@param IsQCPass QC Pass	  */
+		@param IsQCPass QC Pass
+	*/
 	public void setIsQCPass (boolean IsQCPass)
 	{
 		set_Value (COLUMNNAME_IsQCPass, Boolean.valueOf(IsQCPass));
@@ -103,7 +125,7 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 
 	/** Get QC Pass.
 		@return QC Pass	  */
-	public boolean isQCPass () 
+	public boolean isQCPass()
 	{
 		Object oo = get_Value(COLUMNNAME_IsQCPass);
 		if (oo != null) 
@@ -116,18 +138,19 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	/** Set Quality Test Result.
-		@param JP_PP_FactLineQT_ID Quality Test Result	  */
+		@param JP_PP_FactLineQT_ID Quality Test Result
+	*/
 	public void setJP_PP_FactLineQT_ID (int JP_PP_FactLineQT_ID)
 	{
-		if (JP_PP_FactLineQT_ID < 1) 
+		if (JP_PP_FactLineQT_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_FactLineQT_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_FactLineQT_ID, Integer.valueOf(JP_PP_FactLineQT_ID));
 	}
 
 	/** Get Quality Test Result.
 		@return Quality Test Result	  */
-	public int getJP_PP_FactLineQT_ID () 
+	public int getJP_PP_FactLineQT_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_FactLineQT_ID);
 		if (ii == null)
@@ -136,7 +159,8 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	/** Set Quality Test Result(UU).
-		@param JP_PP_FactLineQT_UU Quality Test Result(UU)	  */
+		@param JP_PP_FactLineQT_UU Quality Test Result(UU)
+	*/
 	public void setJP_PP_FactLineQT_UU (String JP_PP_FactLineQT_UU)
 	{
 		set_Value (COLUMNNAME_JP_PP_FactLineQT_UU, JP_PP_FactLineQT_UU);
@@ -144,29 +168,31 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 
 	/** Get Quality Test Result(UU).
 		@return Quality Test Result(UU)	  */
-	public String getJP_PP_FactLineQT_UU () 
+	public String getJP_PP_FactLineQT_UU()
 	{
 		return (String)get_Value(COLUMNNAME_JP_PP_FactLineQT_UU);
 	}
 
 	public I_JP_PP_FactLine getJP_PP_FactLine() throws RuntimeException
-    {
-		return (I_JP_PP_FactLine)MTable.get(getCtx(), I_JP_PP_FactLine.Table_Name)
-			.getPO(getJP_PP_FactLine_ID(), get_TrxName());	}
+	{
+		return (I_JP_PP_FactLine)MTable.get(getCtx(), I_JP_PP_FactLine.Table_ID)
+			.getPO(getJP_PP_FactLine_ID(), get_TrxName());
+	}
 
 	/** Set PP Fact Line.
-		@param JP_PP_FactLine_ID PP Fact Line	  */
+		@param JP_PP_FactLine_ID PP Fact Line
+	*/
 	public void setJP_PP_FactLine_ID (int JP_PP_FactLine_ID)
 	{
-		if (JP_PP_FactLine_ID < 1) 
+		if (JP_PP_FactLine_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_FactLine_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_FactLine_ID, Integer.valueOf(JP_PP_FactLine_ID));
 	}
 
 	/** Get PP Fact Line.
 		@return PP Fact Line	  */
-	public int getJP_PP_FactLine_ID () 
+	public int getJP_PP_FactLine_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_FactLine_ID);
 		if (ii == null)
@@ -175,23 +201,25 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	public I_JP_PP_PlanLineQT getJP_PP_PlanLineQT() throws RuntimeException
-    {
-		return (I_JP_PP_PlanLineQT)MTable.get(getCtx(), I_JP_PP_PlanLineQT.Table_Name)
-			.getPO(getJP_PP_PlanLineQT_ID(), get_TrxName());	}
+	{
+		return (I_JP_PP_PlanLineQT)MTable.get(getCtx(), I_JP_PP_PlanLineQT.Table_ID)
+			.getPO(getJP_PP_PlanLineQT_ID(), get_TrxName());
+	}
 
 	/** Set Quality Test Item.
-		@param JP_PP_PlanLineQT_ID Quality Test Item	  */
+		@param JP_PP_PlanLineQT_ID Quality Test Item
+	*/
 	public void setJP_PP_PlanLineQT_ID (int JP_PP_PlanLineQT_ID)
 	{
-		if (JP_PP_PlanLineQT_ID < 1) 
+		if (JP_PP_PlanLineQT_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineQT_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineQT_ID, Integer.valueOf(JP_PP_PlanLineQT_ID));
 	}
 
 	/** Get Quality Test Item.
 		@return Quality Test Item	  */
-	public int getJP_PP_PlanLineQT_ID () 
+	public int getJP_PP_PlanLineQT_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_PlanLineQT_ID);
 		if (ii == null)
@@ -200,26 +228,26 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	public I_M_AttributeSetInstance getM_AttributeSetInstance() throws RuntimeException
-    {
-		return (I_M_AttributeSetInstance)MTable.get(getCtx(), I_M_AttributeSetInstance.Table_Name)
-			.getPO(getM_AttributeSetInstance_ID(), get_TrxName());	}
+	{
+		return (I_M_AttributeSetInstance)MTable.get(getCtx(), I_M_AttributeSetInstance.Table_ID)
+			.getPO(getM_AttributeSetInstance_ID(), get_TrxName());
+	}
 
 	/** Set Attribute Info.
-		@param M_AttributeSetInstance_ID 
-		Product Attribute Set Instance
-	  */
+		@param M_AttributeSetInstance_ID Product Attribute Set Instance
+	*/
 	public void setM_AttributeSetInstance_ID (int M_AttributeSetInstance_ID)
 	{
-		if (M_AttributeSetInstance_ID < 0) 
+		if (M_AttributeSetInstance_ID < 0)
 			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, null);
-		else 
+		else
 			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, Integer.valueOf(M_AttributeSetInstance_ID));
 	}
 
 	/** Get Attribute Info.
 		@return Product Attribute Set Instance
 	  */
-	public int getM_AttributeSetInstance_ID () 
+	public int getM_AttributeSetInstance_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_AttributeSetInstance_ID);
 		if (ii == null)
@@ -228,23 +256,25 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	public org.compiere.model.I_M_QualityTest getM_QualityTest() throws RuntimeException
-    {
-		return (org.compiere.model.I_M_QualityTest)MTable.get(getCtx(), org.compiere.model.I_M_QualityTest.Table_Name)
-			.getPO(getM_QualityTest_ID(), get_TrxName());	}
+	{
+		return (org.compiere.model.I_M_QualityTest)MTable.get(getCtx(), org.compiere.model.I_M_QualityTest.Table_ID)
+			.getPO(getM_QualityTest_ID(), get_TrxName());
+	}
 
 	/** Set Quality Test.
-		@param M_QualityTest_ID Quality Test	  */
+		@param M_QualityTest_ID Quality Test
+	*/
 	public void setM_QualityTest_ID (int M_QualityTest_ID)
 	{
-		if (M_QualityTest_ID < 1) 
+		if (M_QualityTest_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_M_QualityTest_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_M_QualityTest_ID, Integer.valueOf(M_QualityTest_ID));
 	}
 
 	/** Get Quality Test.
 		@return Quality Test	  */
-	public int getM_QualityTest_ID () 
+	public int getM_QualityTest_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_QualityTest_ID);
 		if (ii == null)
@@ -261,9 +291,8 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
     }
 
 	/** Set Processed.
-		@param Processed 
-		The document has been processed
-	  */
+		@param Processed The document has been processed
+	*/
 	public void setProcessed (boolean Processed)
 	{
 		set_Value (COLUMNNAME_Processed, Boolean.valueOf(Processed));
@@ -272,7 +301,7 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	/** Get Processed.
 		@return The document has been processed
 	  */
-	public boolean isProcessed () 
+	public boolean isProcessed()
 	{
 		Object oo = get_Value(COLUMNNAME_Processed);
 		if (oo != null) 
@@ -285,9 +314,8 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	}
 
 	/** Set Result.
-		@param Result 
-		Result of the action taken
-	  */
+		@param Result Result of the action taken
+	*/
 	public void setResult (String Result)
 	{
 		set_Value (COLUMNNAME_Result, Result);
@@ -296,15 +324,14 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	/** Get Result.
 		@return Result of the action taken
 	  */
-	public String getResult () 
+	public String getResult()
 	{
 		return (String)get_Value(COLUMNNAME_Result);
 	}
 
 	/** Set Sequence.
-		@param SeqNo 
-		Method of ordering records; lowest number comes first
-	  */
+		@param SeqNo Method of ordering records; lowest number comes first
+	*/
 	public void setSeqNo (int SeqNo)
 	{
 		set_Value (COLUMNNAME_SeqNo, Integer.valueOf(SeqNo));
@@ -313,7 +340,7 @@ public class X_JP_PP_FactLineQT extends PO implements I_JP_PP_FactLineQT, I_Pers
 	/** Get Sequence.
 		@return Method of ordering records; lowest number comes first
 	  */
-	public int getSeqNo () 
+	public int getSeqNo()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_SeqNo);
 		if (ii == null)

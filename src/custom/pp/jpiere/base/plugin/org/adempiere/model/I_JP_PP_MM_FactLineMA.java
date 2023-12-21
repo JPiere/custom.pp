@@ -21,18 +21,18 @@ import java.sql.Timestamp;
 import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for JP_PP_FactLineQT
+/** Generated Interface for JP_PP_MM_FactLineMA
  *  @author iDempiere (generated) 
  *  @version Release 10
  */
 @SuppressWarnings("all")
-public interface I_JP_PP_FactLineQT 
+public interface I_JP_PP_MM_FactLineMA 
 {
 
-    /** TableName=JP_PP_FactLineQT */
-    public static final String Table_Name = "JP_PP_FactLineQT";
+    /** TableName=JP_PP_MM_FactLineMA */
+    public static final String Table_Name = "JP_PP_MM_FactLineMA";
 
-    /** AD_Table_ID=1000275 */
+    /** AD_Table_ID=1000312 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -80,14 +80,18 @@ public interface I_JP_PP_FactLineQT
 	  */
 	public int getCreatedBy();
 
-    /** Column name ExpectedResult */
-    public static final String COLUMNNAME_ExpectedResult = "ExpectedResult";
+    /** Column name DateMaterialPolicy */
+    public static final String COLUMNNAME_DateMaterialPolicy = "DateMaterialPolicy";
 
-	/** Set Expected Result	  */
-	public void setExpectedResult (String ExpectedResult);
+	/** Set Date  Material Policy.
+	  * Time used for LIFO and FIFO Material Policy
+	  */
+	public void setDateMaterialPolicy (Timestamp DateMaterialPolicy);
 
-	/** Get Expected Result	  */
-	public String getExpectedResult();
+	/** Get Date  Material Policy.
+	  * Time used for LIFO and FIFO Material Policy
+	  */
+	public Timestamp getDateMaterialPolicy();
 
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
@@ -102,54 +106,25 @@ public interface I_JP_PP_FactLineQT
 	  */
 	public boolean isActive();
 
-    /** Column name IsQCPass */
-    public static final String COLUMNNAME_IsQCPass = "IsQCPass";
+    /** Column name JP_PP_MM_FactLineMA_UU */
+    public static final String COLUMNNAME_JP_PP_MM_FactLineMA_UU = "JP_PP_MM_FactLineMA_UU";
 
-	/** Set QC Pass	  */
-	public void setIsQCPass (boolean IsQCPass);
+	/** Set JP_PP_MM_FactLineMA_UU	  */
+	public void setJP_PP_MM_FactLineMA_UU (String JP_PP_MM_FactLineMA_UU);
 
-	/** Get QC Pass	  */
-	public boolean isQCPass();
+	/** Get JP_PP_MM_FactLineMA_UU	  */
+	public String getJP_PP_MM_FactLineMA_UU();
 
-    /** Column name JP_PP_FactLineQT_ID */
-    public static final String COLUMNNAME_JP_PP_FactLineQT_ID = "JP_PP_FactLineQT_ID";
+    /** Column name JP_PP_MM_FactLine_ID */
+    public static final String COLUMNNAME_JP_PP_MM_FactLine_ID = "JP_PP_MM_FactLine_ID";
 
-	/** Set Quality Test Result	  */
-	public void setJP_PP_FactLineQT_ID (int JP_PP_FactLineQT_ID);
+	/** Set JP_PP_MM_FactLine	  */
+	public void setJP_PP_MM_FactLine_ID (int JP_PP_MM_FactLine_ID);
 
-	/** Get Quality Test Result	  */
-	public int getJP_PP_FactLineQT_ID();
+	/** Get JP_PP_MM_FactLine	  */
+	public int getJP_PP_MM_FactLine_ID();
 
-    /** Column name JP_PP_FactLineQT_UU */
-    public static final String COLUMNNAME_JP_PP_FactLineQT_UU = "JP_PP_FactLineQT_UU";
-
-	/** Set Quality Test Result(UU)	  */
-	public void setJP_PP_FactLineQT_UU (String JP_PP_FactLineQT_UU);
-
-	/** Get Quality Test Result(UU)	  */
-	public String getJP_PP_FactLineQT_UU();
-
-    /** Column name JP_PP_FactLine_ID */
-    public static final String COLUMNNAME_JP_PP_FactLine_ID = "JP_PP_FactLine_ID";
-
-	/** Set PP Fact Line	  */
-	public void setJP_PP_FactLine_ID (int JP_PP_FactLine_ID);
-
-	/** Get PP Fact Line	  */
-	public int getJP_PP_FactLine_ID();
-
-	public I_JP_PP_FactLine getJP_PP_FactLine() throws RuntimeException;
-
-    /** Column name JP_PP_PlanLineQT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineQT_ID = "JP_PP_PlanLineQT_ID";
-
-	/** Set Quality Test Item	  */
-	public void setJP_PP_PlanLineQT_ID (int JP_PP_PlanLineQT_ID);
-
-	/** Get Quality Test Item	  */
-	public int getJP_PP_PlanLineQT_ID();
-
-	public I_JP_PP_PlanLineQT getJP_PP_PlanLineQT() throws RuntimeException;
+	public I_JP_PP_MM_FactLine getJP_PP_MM_FactLine() throws RuntimeException;
 
     /** Column name M_AttributeSetInstance_ID */
     public static final String COLUMNNAME_M_AttributeSetInstance_ID = "M_AttributeSetInstance_ID";
@@ -166,57 +141,18 @@ public interface I_JP_PP_FactLineQT
 
 	public I_M_AttributeSetInstance getM_AttributeSetInstance() throws RuntimeException;
 
-    /** Column name M_QualityTest_ID */
-    public static final String COLUMNNAME_M_QualityTest_ID = "M_QualityTest_ID";
+    /** Column name MovementQty */
+    public static final String COLUMNNAME_MovementQty = "MovementQty";
 
-	/** Set Quality Test	  */
-	public void setM_QualityTest_ID (int M_QualityTest_ID);
-
-	/** Get Quality Test	  */
-	public int getM_QualityTest_ID();
-
-	public org.compiere.model.I_M_QualityTest getM_QualityTest() throws RuntimeException;
-
-    /** Column name Processed */
-    public static final String COLUMNNAME_Processed = "Processed";
-
-	/** Set Processed.
-	  * The document has been processed
+	/** Set Movement Quantity.
+	  * Quantity of a product moved.
 	  */
-	public void setProcessed (boolean Processed);
+	public void setMovementQty (BigDecimal MovementQty);
 
-	/** Get Processed.
-	  * The document has been processed
+	/** Get Movement Quantity.
+	  * Quantity of a product moved.
 	  */
-	public boolean isProcessed();
-
-    /** Column name Result */
-    public static final String COLUMNNAME_Result = "Result";
-
-	/** Set Result.
-	  * Result of the action taken
-	  */
-	public void setResult (String Result);
-
-	/** Get Result.
-	  * Result of the action taken
-	  */
-	public String getResult();
-
-    /** Column name SeqNo */
-    public static final String COLUMNNAME_SeqNo = "SeqNo";
-
-	/** Set Sequence.
-	  * Method of ordering records;
- lowest number comes first
-	  */
-	public void setSeqNo (int SeqNo);
-
-	/** Get Sequence.
-	  * Method of ordering records;
- lowest number comes first
-	  */
-	public int getSeqNo();
+	public BigDecimal getMovementQty();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";

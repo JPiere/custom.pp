@@ -21,25 +21,25 @@ import java.sql.Timestamp;
 import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for JP_PP_PlanLineTQT
+/** Generated Interface for JP_PhysicalWarehouse
  *  @author iDempiere (generated) 
  *  @version Release 10
  */
 @SuppressWarnings("all")
-public interface I_JP_PP_PlanLineTQT 
+public interface I_JP_PhysicalWarehouse 
 {
 
-    /** TableName=JP_PP_PlanLineTQT */
-    public static final String Table_Name = "JP_PP_PlanLineTQT";
+    /** TableName=JP_PhysicalWarehouse */
+    public static final String Table_Name = "JP_PhysicalWarehouse";
 
-    /** AD_Table_ID=1000277 */
+    /** AD_Table_ID=1000114 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
 
-    /** AccessLevel = 1 - Org 
+    /** AccessLevel = 3 - Client - Org 
      */
-    BigDecimal accessLevel = BigDecimal.valueOf(1);
+    BigDecimal accessLevel = BigDecimal.valueOf(3);
 
     /** Load Meta Data */
 
@@ -63,6 +63,21 @@ public interface I_JP_PP_PlanLineTQT
 	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
+
+    /** Column name C_Location_ID */
+    public static final String COLUMNNAME_C_Location_ID = "C_Location_ID";
+
+	/** Set Address.
+	  * Location or Address
+	  */
+	public void setC_Location_ID (int C_Location_ID);
+
+	/** Get Address.
+	  * Location or Address
+	  */
+	public int getC_Location_ID();
+
+	public org.compiere.model.I_C_Location getC_Location() throws RuntimeException;
 
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
@@ -93,15 +108,6 @@ public interface I_JP_PP_PlanLineTQT
 	  */
 	public String getDescription();
 
-    /** Column name ExpectedResult */
-    public static final String COLUMNNAME_ExpectedResult = "ExpectedResult";
-
-	/** Set Expected Result	  */
-	public void setExpectedResult (String ExpectedResult);
-
-	/** Get Expected Result	  */
-	public String getExpectedResult();
-
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -115,64 +121,36 @@ public interface I_JP_PP_PlanLineTQT
 	  */
 	public boolean isActive();
 
-    /** Column name JP_PP_PlanLineTQT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineTQT_ID = "JP_PP_PlanLineTQT_ID";
+    /** Column name JP_PhysicalWarehouse_ID */
+    public static final String COLUMNNAME_JP_PhysicalWarehouse_ID = "JP_PhysicalWarehouse_ID";
 
-	/** Set PP Quality Test Template	  */
-	public void setJP_PP_PlanLineTQT_ID (int JP_PP_PlanLineTQT_ID);
+	/** Set Physical Warehouse	  */
+	public void setJP_PhysicalWarehouse_ID (int JP_PhysicalWarehouse_ID);
 
-	/** Get PP Quality Test Template	  */
-	public int getJP_PP_PlanLineTQT_ID();
+	/** Get Physical Warehouse	  */
+	public int getJP_PhysicalWarehouse_ID();
 
-    /** Column name JP_PP_PlanLineTQT_UU */
-    public static final String COLUMNNAME_JP_PP_PlanLineTQT_UU = "JP_PP_PlanLineTQT_UU";
+    /** Column name JP_PhysicalWarehouse_UU */
+    public static final String COLUMNNAME_JP_PhysicalWarehouse_UU = "JP_PhysicalWarehouse_UU";
 
-	/** Set PP Quality Test Template (UU)	  */
-	public void setJP_PP_PlanLineTQT_UU (String JP_PP_PlanLineTQT_UU);
+	/** Set Physical Warehouse	  */
+	public void setJP_PhysicalWarehouse_UU (String JP_PhysicalWarehouse_UU);
 
-	/** Get PP Quality Test Template (UU)	  */
-	public String getJP_PP_PlanLineTQT_UU();
+	/** Get Physical Warehouse	  */
+	public String getJP_PhysicalWarehouse_UU();
 
-    /** Column name JP_PP_PlanLineT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineT_ID = "JP_PP_PlanLineT_ID";
+    /** Column name Name */
+    public static final String COLUMNNAME_Name = "Name";
 
-	/** Set PP Plan Line Template.
-	  * JPIERE-0501:JPBP
+	/** Set Name.
+	  * Alphanumeric identifier of the entity
 	  */
-	public void setJP_PP_PlanLineT_ID (int JP_PP_PlanLineT_ID);
+	public void setName (String Name);
 
-	/** Get PP Plan Line Template.
-	  * JPIERE-0501:JPBP
+	/** Get Name.
+	  * Alphanumeric identifier of the entity
 	  */
-	public int getJP_PP_PlanLineT_ID();
-
-	public I_JP_PP_PlanLineT getJP_PP_PlanLineT() throws RuntimeException;
-
-    /** Column name M_QualityTest_ID */
-    public static final String COLUMNNAME_M_QualityTest_ID = "M_QualityTest_ID";
-
-	/** Set Quality Test	  */
-	public void setM_QualityTest_ID (int M_QualityTest_ID);
-
-	/** Get Quality Test	  */
-	public int getM_QualityTest_ID();
-
-	public org.compiere.model.I_M_QualityTest getM_QualityTest() throws RuntimeException;
-
-    /** Column name SeqNo */
-    public static final String COLUMNNAME_SeqNo = "SeqNo";
-
-	/** Set Sequence.
-	  * Method of ordering records;
- lowest number comes first
-	  */
-	public void setSeqNo (int SeqNo);
-
-	/** Get Sequence.
-	  * Method of ordering records;
- lowest number comes first
-	  */
-	public int getSeqNo();
+	public String getName();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
@@ -189,4 +167,17 @@ public interface I_JP_PP_PlanLineTQT
 	  * User who updated this records
 	  */
 	public int getUpdatedBy();
+
+    /** Column name Value */
+    public static final String COLUMNNAME_Value = "Value";
+
+	/** Set Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public void setValue (String Value);
+
+	/** Get Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public String getValue();
 }

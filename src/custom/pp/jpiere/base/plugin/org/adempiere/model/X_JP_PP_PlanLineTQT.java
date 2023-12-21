@@ -24,19 +24,35 @@ import org.compiere.util.KeyNamePair;
 
 /** Generated Model for JP_PP_PlanLineTQT
  *  @author iDempiere (generated) 
- *  @version Release 8.2 - $Id$ */
+ *  @version Release 10 - $Id$ */
+@org.adempiere.base.Model(table="JP_PP_PlanLineTQT")
 public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Persistent 
 {
 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20211026L;
+	private static final long serialVersionUID = 20231221L;
 
     /** Standard Constructor */
     public X_JP_PP_PlanLineTQT (Properties ctx, int JP_PP_PlanLineTQT_ID, String trxName)
     {
       super (ctx, JP_PP_PlanLineTQT_ID, trxName);
+      /** if (JP_PP_PlanLineTQT_ID == 0)
+        {
+			setExpectedResult (null);
+			setJP_PP_PlanLineTQT_ID (0);
+			setJP_PP_PlanLineT_ID (0);
+			setM_QualityTest_ID (0);
+			setSeqNo (0);
+// @SQL=SELECT COALESCE(MAX(SeqNo),0)+10 AS DefaultValue FROM JP_PP_PlanLineTQT WHERE JP_PP_PlanLineT_ID=@JP_PP_PlanLineT_ID@
+        } */
+    }
+
+    /** Standard Constructor */
+    public X_JP_PP_PlanLineTQT (Properties ctx, int JP_PP_PlanLineTQT_ID, String trxName, String ... virtualColumns)
+    {
+      super (ctx, JP_PP_PlanLineTQT_ID, trxName, virtualColumns);
       /** if (JP_PP_PlanLineTQT_ID == 0)
         {
 			setExpectedResult (null);
@@ -77,9 +93,8 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
     }
 
 	/** Set Description.
-		@param Description 
-		Optional short description of the record
-	  */
+		@param Description Optional short description of the record
+	*/
 	public void setDescription (String Description)
 	{
 		set_Value (COLUMNNAME_Description, Description);
@@ -88,13 +103,14 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 	/** Get Description.
 		@return Optional short description of the record
 	  */
-	public String getDescription () 
+	public String getDescription()
 	{
 		return (String)get_Value(COLUMNNAME_Description);
 	}
 
 	/** Set Expected Result.
-		@param ExpectedResult Expected Result	  */
+		@param ExpectedResult Expected Result
+	*/
 	public void setExpectedResult (String ExpectedResult)
 	{
 		set_Value (COLUMNNAME_ExpectedResult, ExpectedResult);
@@ -102,24 +118,25 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 
 	/** Get Expected Result.
 		@return Expected Result	  */
-	public String getExpectedResult () 
+	public String getExpectedResult()
 	{
 		return (String)get_Value(COLUMNNAME_ExpectedResult);
 	}
 
 	/** Set PP Quality Test Template.
-		@param JP_PP_PlanLineTQT_ID PP Quality Test Template	  */
+		@param JP_PP_PlanLineTQT_ID PP Quality Test Template
+	*/
 	public void setJP_PP_PlanLineTQT_ID (int JP_PP_PlanLineTQT_ID)
 	{
-		if (JP_PP_PlanLineTQT_ID < 1) 
+		if (JP_PP_PlanLineTQT_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineTQT_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineTQT_ID, Integer.valueOf(JP_PP_PlanLineTQT_ID));
 	}
 
 	/** Get PP Quality Test Template.
 		@return PP Quality Test Template	  */
-	public int getJP_PP_PlanLineTQT_ID () 
+	public int getJP_PP_PlanLineTQT_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_PlanLineTQT_ID);
 		if (ii == null)
@@ -128,7 +145,8 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 	}
 
 	/** Set PP Quality Test Template (UU).
-		@param JP_PP_PlanLineTQT_UU PP Quality Test Template (UU)	  */
+		@param JP_PP_PlanLineTQT_UU PP Quality Test Template (UU)
+	*/
 	public void setJP_PP_PlanLineTQT_UU (String JP_PP_PlanLineTQT_UU)
 	{
 		set_Value (COLUMNNAME_JP_PP_PlanLineTQT_UU, JP_PP_PlanLineTQT_UU);
@@ -136,32 +154,32 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 
 	/** Get PP Quality Test Template (UU).
 		@return PP Quality Test Template (UU)	  */
-	public String getJP_PP_PlanLineTQT_UU () 
+	public String getJP_PP_PlanLineTQT_UU()
 	{
 		return (String)get_Value(COLUMNNAME_JP_PP_PlanLineTQT_UU);
 	}
 
 	public I_JP_PP_PlanLineT getJP_PP_PlanLineT() throws RuntimeException
-    {
-		return (I_JP_PP_PlanLineT)MTable.get(getCtx(), I_JP_PP_PlanLineT.Table_Name)
-			.getPO(getJP_PP_PlanLineT_ID(), get_TrxName());	}
+	{
+		return (I_JP_PP_PlanLineT)MTable.get(getCtx(), I_JP_PP_PlanLineT.Table_ID)
+			.getPO(getJP_PP_PlanLineT_ID(), get_TrxName());
+	}
 
 	/** Set PP Plan Line Template.
-		@param JP_PP_PlanLineT_ID 
-		JPIERE-0501:JPBP
-	  */
+		@param JP_PP_PlanLineT_ID JPIERE-0501:JPBP
+	*/
 	public void setJP_PP_PlanLineT_ID (int JP_PP_PlanLineT_ID)
 	{
-		if (JP_PP_PlanLineT_ID < 1) 
+		if (JP_PP_PlanLineT_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineT_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLineT_ID, Integer.valueOf(JP_PP_PlanLineT_ID));
 	}
 
 	/** Get PP Plan Line Template.
 		@return JPIERE-0501:JPBP
 	  */
-	public int getJP_PP_PlanLineT_ID () 
+	public int getJP_PP_PlanLineT_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_PlanLineT_ID);
 		if (ii == null)
@@ -170,23 +188,25 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 	}
 
 	public org.compiere.model.I_M_QualityTest getM_QualityTest() throws RuntimeException
-    {
-		return (org.compiere.model.I_M_QualityTest)MTable.get(getCtx(), org.compiere.model.I_M_QualityTest.Table_Name)
-			.getPO(getM_QualityTest_ID(), get_TrxName());	}
+	{
+		return (org.compiere.model.I_M_QualityTest)MTable.get(getCtx(), org.compiere.model.I_M_QualityTest.Table_ID)
+			.getPO(getM_QualityTest_ID(), get_TrxName());
+	}
 
 	/** Set Quality Test.
-		@param M_QualityTest_ID Quality Test	  */
+		@param M_QualityTest_ID Quality Test
+	*/
 	public void setM_QualityTest_ID (int M_QualityTest_ID)
 	{
-		if (M_QualityTest_ID < 1) 
+		if (M_QualityTest_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_M_QualityTest_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_M_QualityTest_ID, Integer.valueOf(M_QualityTest_ID));
 	}
 
 	/** Get Quality Test.
 		@return Quality Test	  */
-	public int getM_QualityTest_ID () 
+	public int getM_QualityTest_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_QualityTest_ID);
 		if (ii == null)
@@ -203,9 +223,8 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
     }
 
 	/** Set Sequence.
-		@param SeqNo 
-		Method of ordering records; lowest number comes first
-	  */
+		@param SeqNo Method of ordering records; lowest number comes first
+	*/
 	public void setSeqNo (int SeqNo)
 	{
 		set_Value (COLUMNNAME_SeqNo, Integer.valueOf(SeqNo));
@@ -214,7 +233,7 @@ public class X_JP_PP_PlanLineTQT extends PO implements I_JP_PP_PlanLineTQT, I_Pe
 	/** Get Sequence.
 		@return Method of ordering records; lowest number comes first
 	  */
-	public int getSeqNo () 
+	public int getSeqNo()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_SeqNo);
 		if (ii == null)

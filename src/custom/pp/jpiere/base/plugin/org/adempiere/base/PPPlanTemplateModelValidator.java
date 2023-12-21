@@ -18,9 +18,11 @@ import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.PO;
 import org.compiere.util.CLogger;
+import org.compiere.util.Util;
 
-import custom.pp.jpiere.base.plugin.org.adempiere.model.I_JP_PP_PlanT;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.I_JP_PP_Plan;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanT;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPWorkProcess;
 
 
 /**
@@ -62,11 +64,27 @@ public class PPPlanTemplateModelValidator implements ModelValidator {
 		if(type == ModelValidator.TYPE_BEFORE_NEW || type == ModelValidator.TYPE_BEFORE_CHANGE)
 		{
 			//Set Name for Tree
-			if(po instanceof I_JP_PP_PlanT)
+			if(po instanceof I_JP_PP_Plan)
 			{
-				I_JP_PP_PlanT i_PO = (I_JP_PP_PlanT)po;
-				i_PO.setName(i_PO.getJP_Name() + " [" + i_PO.getProductionQty()+"]");
+				String JP_PP_WorkProcessType = po.get_ValueAsString("JP_PP_WorkProcessType");
+				
+				if(Util.isEmpty(JP_PP_WorkProcessType) || JP_PP_WorkProcessType.equals(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction))
+				{
+					I_JP_PP_Plan i_PO = (I_JP_PP_Plan)po;
+					i_PO.setName(i_PO.getJP_Name() + " [" + i_PO.getProductionQty()+"]");
+					
+				}else if(JP_PP_WorkProcessType.equals(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement)) {
+					
+					I_JP_PP_Plan i_PO = (I_JP_PP_Plan)po;
+					i_PO.setName(i_PO.getJP_Name());
+					
+				}else if(JP_PP_WorkProcessType.equals(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument)) {
+					
+					I_JP_PP_Plan i_PO = (I_JP_PP_Plan)po;
+					i_PO.setName(i_PO.getJP_Name());
+				}
 			}
+			
 		}
 
 		return null;
@@ -79,3 +97,4 @@ public class PPPlanTemplateModelValidator implements ModelValidator {
 	}
 
 }
+

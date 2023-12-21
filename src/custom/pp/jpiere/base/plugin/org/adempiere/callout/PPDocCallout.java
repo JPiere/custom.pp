@@ -24,18 +24,22 @@ import org.compiere.model.MLocator;
 import org.compiere.model.MProduct;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MUOMConversion;
+import org.compiere.util.Env;
 import org.compiere.util.Util;
 
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPDoc;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPFact;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlan;
 import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPPlanT;
+import custom.pp.jpiere.base.plugin.org.adempiere.model.MPPWorkProcess;
 
 
 /**
- * JPIERE-0501:JPiere PP Doc Callout
+ * JPIERE-0501: JPiere PP Doc
+ * JPIERE-0502: JPiere PP Doc Template
+ * JPIERE-0609: Workprocess & Create Material Movement From PP Fact Doc.
  *
- * @author Hideaki Hagiwara(h.hagiwara@oss-erp.co.jp)
+ * @author Hideaki Hagiwara
  *
  */
 public class PPDocCallout extends CalloutEngine {
@@ -43,8 +47,18 @@ public class PPDocCallout extends CalloutEngine {
 
 	public String convertUom(Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value, Object oldValue)
 	{
-		int C_UOM_To_ID = Integer.valueOf(mTab.get_ValueAsString("C_UOM_ID")).intValue();
-		int M_Product_ID = Integer.valueOf(mTab.get_ValueAsString("M_Product_ID")).intValue();
+		int C_UOM_To_ID = 0;
+		if(mTab.getValue("C_UOM_ID") == null)
+			return "";
+		
+		C_UOM_To_ID = Integer.valueOf(mTab.get_ValueAsString("C_UOM_ID")).intValue();
+		
+		int M_Product_ID = 0;
+		if(mTab.getValue("M_Product_ID") == null)
+			return "";
+		
+		M_Product_ID = Integer.valueOf(mTab.get_ValueAsString("M_Product_ID")).intValue();
+		
 		BigDecimal QtyEntered = (BigDecimal)mTab.getValue("QtyEntered");
 
 		BigDecimal productionQty = MUOMConversion.convertProductFrom (ctx, M_Product_ID,C_UOM_To_ID, QtyEntered);
@@ -56,7 +70,11 @@ public class PPDocCallout extends CalloutEngine {
 
 	public String product(Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value, Object oldValue)
 	{
-		int M_Product_ID = Integer.valueOf(mTab.get_ValueAsString("M_Product_ID")).intValue();
+		int M_Product_ID = 0;
+		
+		if(mTab.getValue("M_Product_ID") != null)
+			M_Product_ID = Integer.valueOf(mTab.get_ValueAsString("M_Product_ID")).intValue();
+		
 		if(M_Product_ID != 0)
 		{
 			MProduct m_Product = MProduct.get(M_Product_ID);
@@ -120,6 +138,50 @@ public class PPDocCallout extends CalloutEngine {
 			mTab.setValue("Name", JP_Name + " [" + (ProductionQty == null? 0 : ProductionQty) +"]");
 		}
 
+		return null;
+	}
+	
+	//Set Work Process Type from Work Process.
+	public String workProcess(Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value, Object oldValue)
+	{
+	
+		if(value == null)
+		{
+			mTab.setValue(MPPWorkProcess.COLUMNNAME_JP_PP_WorkProcessType, null);
+		}else {
+			
+			int JP_PP_WorkProcess_ID = ((Integer)value).intValue();
+			MPPWorkProcess m_PPWorkProcess = MPPWorkProcess.get(ctx, JP_PP_WorkProcess_ID);
+			mTab.setValue(MPPWorkProcess.COLUMNNAME_JP_PP_WorkProcessType, m_PPWorkProcess.getJP_PP_WorkProcessType());
+		}
+		
+		return null;
+	}
+	
+	//Set Context for window of PP Fact Unprocessed (login User)
+	public String JP_PP_Fact_ID(Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value, Object oldValue)
+	{
+		if(mTab.getTabNo()==0)
+		{
+			Object obj_JP_PP_Plan_ID = mTab.getValue("JP_PP_Plan_ID");
+			if(obj_JP_PP_Plan_ID == null)
+				return null;
+			
+			int JP_PP_Plan_ID = ((Integer)obj_JP_PP_Plan_ID).intValue();
+			if(JP_PP_Plan_ID == 0)
+				return null;
+			
+			MPPPlan m_PPPlan = MPPPlan.get(ctx, JP_PP_Plan_ID);
+			Env.setContext(ctx, WindowNo, MPPPlan.COLUMNNAME_JP_PP_WorkProcessType, m_PPPlan.getJP_PP_WorkProcessType());
+			if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(m_PPPlan.getJP_PP_WorkProcessType()))
+			{
+				Env.setContext(ctx, WindowNo, MPPPlan.COLUMNNAME_JP_WarehouseFrom_ID, m_PPPlan.getJP_WarehouseFrom_ID());
+				Env.setContext(ctx, WindowNo, MPPPlan.COLUMNNAME_JP_WarehouseTo_ID, m_PPPlan.getJP_WarehouseTo_ID());
+				Env.setContext(ctx, WindowNo, MPPPlan.COLUMNNAME_JP_PhysicalWarehouseFrom_ID, m_PPPlan.getJP_PhysicalWarehouseFrom_ID());
+				Env.setContext(ctx, WindowNo, MPPPlan.COLUMNNAME_JP_PhysicalWarehouseTo_ID, m_PPPlan.getJP_PhysicalWarehouseTo_ID());
+			}
+		}
+			
 		return null;
 	}
 }

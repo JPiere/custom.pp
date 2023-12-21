@@ -21,18 +21,18 @@ import java.sql.Timestamp;
 import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for JP_PP_PlanLineT
+/** Generated Interface for JP_PP_MM_FactLine
  *  @author iDempiere (generated) 
  *  @version Release 10
  */
 @SuppressWarnings("all")
-public interface I_JP_PP_PlanLineT 
+public interface I_JP_PP_MM_FactLine 
 {
 
-    /** TableName=JP_PP_PlanLineT */
-    public static final String Table_Name = "JP_PP_PlanLineT";
+    /** TableName=JP_PP_MM_FactLine */
+    public static final String Table_Name = "JP_PP_MM_FactLine";
 
-    /** AD_Table_ID=1000267 */
+    /** AD_Table_ID=1000311 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -64,21 +64,6 @@ public interface I_JP_PP_PlanLineT
 	  */
 	public int getAD_Org_ID();
 
-    /** Column name C_UOM_ID */
-    public static final String COLUMNNAME_C_UOM_ID = "C_UOM_ID";
-
-	/** Set UOM.
-	  * Unit of Measure
-	  */
-	public void setC_UOM_ID (int C_UOM_ID);
-
-	/** Get UOM.
-	  * Unit of Measure
-	  */
-	public int getC_UOM_ID();
-
-	public org.compiere.model.I_C_UOM getC_UOM() throws RuntimeException;
-
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
 
@@ -108,32 +93,6 @@ public interface I_JP_PP_PlanLineT
 	  */
 	public String getDescription();
 
-    /** Column name DocumentNote */
-    public static final String COLUMNNAME_DocumentNote = "DocumentNote";
-
-	/** Set Document Note.
-	  * Additional information for a Document
-	  */
-	public void setDocumentNote (String DocumentNote);
-
-	/** Get Document Note.
-	  * Additional information for a Document
-	  */
-	public String getDocumentNote();
-
-    /** Column name Help */
-    public static final String COLUMNNAME_Help = "Help";
-
-	/** Set Comment/Help.
-	  * Comment or Hint
-	  */
-	public void setHelp (String Help);
-
-	/** Get Comment/Help.
-	  * Comment or Hint
-	  */
-	public String getHelp();
-
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -147,91 +106,58 @@ public interface I_JP_PP_PlanLineT
 	  */
 	public boolean isActive();
 
-    /** Column name IsCreated */
-    public static final String COLUMNNAME_IsCreated = "IsCreated";
+    /** Column name JP_CommunicationColumn */
+    public static final String COLUMNNAME_JP_CommunicationColumn = "JP_CommunicationColumn";
 
-	/** Set Records created	  */
-	public void setIsCreated (String IsCreated);
+	/** Set Communication Column	  */
+	public void setJP_CommunicationColumn (String JP_CommunicationColumn);
 
-	/** Get Records created	  */
-	public String getIsCreated();
+	/** Get Communication Column	  */
+	public String getJP_CommunicationColumn();
 
-    /** Column name IsEndProduct */
-    public static final String COLUMNNAME_IsEndProduct = "IsEndProduct";
+    /** Column name JP_PP_Fact_ID */
+    public static final String COLUMNNAME_JP_PP_Fact_ID = "JP_PP_Fact_ID";
 
-	/** Set End Product.
-	  * End Product of production
-	  */
-	public void setIsEndProduct (boolean IsEndProduct);
-
-	/** Get End Product.
-	  * End Product of production
-	  */
-	public boolean isEndProduct();
-
-    /** Column name JP_PP_PlanLineT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineT_ID = "JP_PP_PlanLineT_ID";
-
-	/** Set PP Plan Line Template.
+	/** Set PP Fact.
 	  * JPIERE-0501:JPBP
 	  */
-	public void setJP_PP_PlanLineT_ID (int JP_PP_PlanLineT_ID);
+	public void setJP_PP_Fact_ID (int JP_PP_Fact_ID);
 
-	/** Get PP Plan Line Template.
+	/** Get PP Fact.
 	  * JPIERE-0501:JPBP
 	  */
-	public int getJP_PP_PlanLineT_ID();
+	public int getJP_PP_Fact_ID();
 
-    /** Column name JP_PP_PlanLineT_UU */
-    public static final String COLUMNNAME_JP_PP_PlanLineT_UU = "JP_PP_PlanLineT_UU";
+	public I_JP_PP_Fact getJP_PP_Fact() throws RuntimeException;
 
-	/** Set PP Plan Line Template(UU)	  */
-	public void setJP_PP_PlanLineT_UU (String JP_PP_PlanLineT_UU);
+    /** Column name JP_PP_MM_FactLine_ID */
+    public static final String COLUMNNAME_JP_PP_MM_FactLine_ID = "JP_PP_MM_FactLine_ID";
 
-	/** Get PP Plan Line Template(UU)	  */
-	public String getJP_PP_PlanLineT_UU();
+	/** Set JP_PP_MM_FactLine	  */
+	public void setJP_PP_MM_FactLine_ID (int JP_PP_MM_FactLine_ID);
 
-    /** Column name JP_PP_PlanT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanT_ID = "JP_PP_PlanT_ID";
+	/** Get JP_PP_MM_FactLine	  */
+	public int getJP_PP_MM_FactLine_ID();
 
-	/** Set PP Plan Template.
-	  * JPIERE-0501:JPBP
-	  */
-	public void setJP_PP_PlanT_ID (int JP_PP_PlanT_ID);
+    /** Column name JP_PP_MM_FactLine_UU */
+    public static final String COLUMNNAME_JP_PP_MM_FactLine_UU = "JP_PP_MM_FactLine_UU";
 
-	/** Get PP Plan Template.
-	  * JPIERE-0501:JPBP
-	  */
-	public int getJP_PP_PlanT_ID();
+	/** Set JP_PP_MM_FactLine_UU	  */
+	public void setJP_PP_MM_FactLine_UU (String JP_PP_MM_FactLine_UU);
 
-	public I_JP_PP_PlanT getJP_PP_PlanT() throws RuntimeException;
+	/** Get JP_PP_MM_FactLine_UU	  */
+	public String getJP_PP_MM_FactLine_UU();
 
-    /** Column name JP_Processing1 */
-    public static final String COLUMNNAME_JP_Processing1 = "JP_Processing1";
+    /** Column name JP_PP_MM_PlanLine_ID */
+    public static final String COLUMNNAME_JP_PP_MM_PlanLine_ID = "JP_PP_MM_PlanLine_ID";
 
-	/** Set Process Now	  */
-	public void setJP_Processing1 (String JP_Processing1);
+	/** Set JP_PP_MM_PlanLine	  */
+	public void setJP_PP_MM_PlanLine_ID (int JP_PP_MM_PlanLine_ID);
 
-	/** Get Process Now	  */
-	public String getJP_Processing1();
+	/** Get JP_PP_MM_PlanLine	  */
+	public int getJP_PP_MM_PlanLine_ID();
 
-    /** Column name JP_Processing2 */
-    public static final String COLUMNNAME_JP_Processing2 = "JP_Processing2";
-
-	/** Set Process Now	  */
-	public void setJP_Processing2 (String JP_Processing2);
-
-	/** Get Process Now	  */
-	public String getJP_Processing2();
-
-    /** Column name JP_Processing3 */
-    public static final String COLUMNNAME_JP_Processing3 = "JP_Processing3";
-
-	/** Set Process Now	  */
-	public void setJP_Processing3 (String JP_Processing3);
-
-	/** Get Process Now	  */
-	public String getJP_Processing3();
+	public I_JP_PP_MM_PlanLine getJP_PP_MM_PlanLine() throws RuntimeException;
 
     /** Column name Line */
     public static final String COLUMNNAME_Line = "Line";
@@ -245,6 +171,21 @@ public interface I_JP_PP_PlanLineT
 	  * Unique line for this document
 	  */
 	public int getLine();
+
+    /** Column name M_AttributeSetInstanceTo_ID */
+    public static final String COLUMNNAME_M_AttributeSetInstanceTo_ID = "M_AttributeSetInstanceTo_ID";
+
+	/** Set Attribute Info To.
+	  * Target Product Attribute Set Instance
+	  */
+	public void setM_AttributeSetInstanceTo_ID (int M_AttributeSetInstanceTo_ID);
+
+	/** Get Attribute Info To.
+	  * Target Product Attribute Set Instance
+	  */
+	public int getM_AttributeSetInstanceTo_ID();
+
+	public I_M_AttributeSetInstance getM_AttributeSetInstanceTo() throws RuntimeException;
 
     /** Column name M_AttributeSetInstance_ID */
     public static final String COLUMNNAME_M_AttributeSetInstance_ID = "M_AttributeSetInstance_ID";
@@ -261,6 +202,21 @@ public interface I_JP_PP_PlanLineT
 
 	public I_M_AttributeSetInstance getM_AttributeSetInstance() throws RuntimeException;
 
+    /** Column name M_LocatorTo_ID */
+    public static final String COLUMNNAME_M_LocatorTo_ID = "M_LocatorTo_ID";
+
+	/** Set Locator To.
+	  * Location inventory is moved to
+	  */
+	public void setM_LocatorTo_ID (int M_LocatorTo_ID);
+
+	/** Get Locator To.
+	  * Location inventory is moved to
+	  */
+	public int getM_LocatorTo_ID();
+
+	public org.compiere.model.I_M_Locator getM_LocatorTo() throws RuntimeException;
+
     /** Column name M_Locator_ID */
     public static final String COLUMNNAME_M_Locator_ID = "M_Locator_ID";
 
@@ -275,6 +231,21 @@ public interface I_JP_PP_PlanLineT
 	public int getM_Locator_ID();
 
 	public org.compiere.model.I_M_Locator getM_Locator() throws RuntimeException;
+
+    /** Column name M_MovementLine_ID */
+    public static final String COLUMNNAME_M_MovementLine_ID = "M_MovementLine_ID";
+
+	/** Set Move Line.
+	  * Inventory Move document Line
+	  */
+	public void setM_MovementLine_ID (int M_MovementLine_ID);
+
+	/** Get Move Line.
+	  * Inventory Move document Line
+	  */
+	public int getM_MovementLine_ID();
+
+	public org.compiere.model.I_M_MovementLine getM_MovementLine() throws RuntimeException;
 
     /** Column name M_Product_ID */
     public static final String COLUMNNAME_M_Product_ID = "M_Product_ID";
@@ -304,27 +275,18 @@ public interface I_JP_PP_PlanLineT
 	  */
 	public BigDecimal getMovementQty();
 
-    /** Column name PlannedQty */
-    public static final String COLUMNNAME_PlannedQty = "PlannedQty";
+    /** Column name Processed */
+    public static final String COLUMNNAME_Processed = "Processed";
 
-	/** Set Planned Quantity.
-	  * Planned quantity for this project
+	/** Set Processed.
+	  * The document has been processed
 	  */
-	public void setPlannedQty (BigDecimal PlannedQty);
+	public void setProcessed (boolean Processed);
 
-	/** Get Planned Quantity.
-	  * Planned quantity for this project
+	/** Get Processed.
+	  * The document has been processed
 	  */
-	public BigDecimal getPlannedQty();
-
-    /** Column name QtyUsed */
-    public static final String COLUMNNAME_QtyUsed = "QtyUsed";
-
-	/** Set Quantity Used	  */
-	public void setQtyUsed (BigDecimal QtyUsed);
-
-	/** Get Quantity Used	  */
-	public BigDecimal getQtyUsed();
+	public boolean isProcessed();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";

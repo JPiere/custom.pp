@@ -25,19 +25,53 @@ import org.compiere.util.Env;
 
 /** Generated Model for JP_PP_PlanLine
  *  @author iDempiere (generated) 
- *  @version Release 8.2 - $Id$ */
+ *  @version Release 10 - $Id$ */
+@org.adempiere.base.Model(table="JP_PP_PlanLine")
 public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persistent 
 {
 
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20211026L;
+	private static final long serialVersionUID = 20231221L;
 
     /** Standard Constructor */
     public X_JP_PP_PlanLine (Properties ctx, int JP_PP_PlanLine_ID, String trxName)
     {
       super (ctx, JP_PP_PlanLine_ID, trxName);
+      /** if (JP_PP_PlanLine_ID == 0)
+        {
+			setIsCreated (null);
+// N
+			setIsEndProduct (false);
+// N
+			setJP_MovementQtyFact (Env.ZERO);
+// 0
+			setJP_PP_PlanLine_ID (0);
+			setJP_PP_Plan_ID (0);
+			setJP_Processing1 (null);
+// N
+			setJP_Processing2 (null);
+// N
+			setJP_Processing3 (null);
+// N
+			setLine (0);
+// @SQL=SELECT NVL(MAX(Line),0)+10 AS DefaultValue FROM JP_PP_PlanLine WHERE JP_PP_Plan_ID=@JP_PP_Plan_ID@
+			setM_AttributeSetInstance_ID (0);
+// 0
+			setM_Locator_ID (0);
+// @M_Locator_ID@
+			setM_Product_ID (0);
+			setMovementQty (Env.ZERO);
+			setProcessed (false);
+// N
+        } */
+    }
+
+    /** Standard Constructor */
+    public X_JP_PP_PlanLine (Properties ctx, int JP_PP_PlanLine_ID, String trxName, String ... virtualColumns)
+    {
+      super (ctx, JP_PP_PlanLine_ID, trxName, virtualColumns);
       /** if (JP_PP_PlanLine_ID == 0)
         {
 			setIsCreated (null);
@@ -96,26 +130,26 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
     }
 
 	public org.compiere.model.I_C_UOM getC_UOM() throws RuntimeException
-    {
-		return (org.compiere.model.I_C_UOM)MTable.get(getCtx(), org.compiere.model.I_C_UOM.Table_Name)
-			.getPO(getC_UOM_ID(), get_TrxName());	}
+	{
+		return (org.compiere.model.I_C_UOM)MTable.get(getCtx(), org.compiere.model.I_C_UOM.Table_ID)
+			.getPO(getC_UOM_ID(), get_TrxName());
+	}
 
 	/** Set UOM.
-		@param C_UOM_ID 
-		Unit of Measure
-	  */
+		@param C_UOM_ID Unit of Measure
+	*/
 	public void setC_UOM_ID (int C_UOM_ID)
 	{
-		if (C_UOM_ID < 1) 
+		if (C_UOM_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_C_UOM_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_C_UOM_ID, Integer.valueOf(C_UOM_ID));
 	}
 
 	/** Get UOM.
 		@return Unit of Measure
 	  */
-	public int getC_UOM_ID () 
+	public int getC_UOM_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_C_UOM_ID);
 		if (ii == null)
@@ -124,9 +158,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Description.
-		@param Description 
-		Optional short description of the record
-	  */
+		@param Description Optional short description of the record
+	*/
 	public void setDescription (String Description)
 	{
 		set_Value (COLUMNNAME_Description, Description);
@@ -135,15 +168,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Description.
 		@return Optional short description of the record
 	  */
-	public String getDescription () 
+	public String getDescription()
 	{
 		return (String)get_Value(COLUMNNAME_Description);
 	}
 
 	/** Set Document Note.
-		@param DocumentNote 
-		Additional information for a Document
-	  */
+		@param DocumentNote Additional information for a Document
+	*/
 	public void setDocumentNote (String DocumentNote)
 	{
 		set_Value (COLUMNNAME_DocumentNote, DocumentNote);
@@ -152,15 +184,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Document Note.
 		@return Additional information for a Document
 	  */
-	public String getDocumentNote () 
+	public String getDocumentNote()
 	{
 		return (String)get_Value(COLUMNNAME_DocumentNote);
 	}
 
 	/** Set Comment/Help.
-		@param Help 
-		Comment or Hint
-	  */
+		@param Help Comment or Hint
+	*/
 	public void setHelp (String Help)
 	{
 		set_Value (COLUMNNAME_Help, Help);
@@ -169,7 +200,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Comment/Help.
 		@return Comment or Hint
 	  */
-	public String getHelp () 
+	public String getHelp()
 	{
 		return (String)get_Value(COLUMNNAME_Help);
 	}
@@ -181,7 +212,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Yes = Y */
 	public static final String ISCREATED_Yes = "Y";
 	/** Set Records created.
-		@param IsCreated Records created	  */
+		@param IsCreated Records created
+	*/
 	public void setIsCreated (String IsCreated)
 	{
 
@@ -190,15 +222,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Records created.
 		@return Records created	  */
-	public String getIsCreated () 
+	public String getIsCreated()
 	{
 		return (String)get_Value(COLUMNNAME_IsCreated);
 	}
 
 	/** Set End Product.
-		@param IsEndProduct 
-		End Product of production
-	  */
+		@param IsEndProduct End Product of production
+	*/
 	public void setIsEndProduct (boolean IsEndProduct)
 	{
 		set_Value (COLUMNNAME_IsEndProduct, Boolean.valueOf(IsEndProduct));
@@ -207,7 +238,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get End Product.
 		@return End Product of production
 	  */
-	public boolean isEndProduct () 
+	public boolean isEndProduct()
 	{
 		Object oo = get_Value(COLUMNNAME_IsEndProduct);
 		if (oo != null) 
@@ -220,9 +251,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Movement Quantity(Fact).
-		@param JP_MovementQtyFact 
-		Quantity of a product moved.
-	  */
+		@param JP_MovementQtyFact Quantity of a product moved.
+	*/
 	public void setJP_MovementQtyFact (BigDecimal JP_MovementQtyFact)
 	{
 		set_ValueNoCheck (COLUMNNAME_JP_MovementQtyFact, JP_MovementQtyFact);
@@ -231,7 +261,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Movement Quantity(Fact).
 		@return Quantity of a product moved.
 	  */
-	public BigDecimal getJP_MovementQtyFact () 
+	public BigDecimal getJP_MovementQtyFact()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_JP_MovementQtyFact);
 		if (bd == null)
@@ -240,26 +270,26 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	public I_JP_PP_PlanLineT getJP_PP_PlanLineT() throws RuntimeException
-    {
-		return (I_JP_PP_PlanLineT)MTable.get(getCtx(), I_JP_PP_PlanLineT.Table_Name)
-			.getPO(getJP_PP_PlanLineT_ID(), get_TrxName());	}
+	{
+		return (I_JP_PP_PlanLineT)MTable.get(getCtx(), I_JP_PP_PlanLineT.Table_ID)
+			.getPO(getJP_PP_PlanLineT_ID(), get_TrxName());
+	}
 
 	/** Set PP Plan Line Template.
-		@param JP_PP_PlanLineT_ID 
-		JPIERE-0501:JPBP
-	  */
+		@param JP_PP_PlanLineT_ID JPIERE-0501:JPBP
+	*/
 	public void setJP_PP_PlanLineT_ID (int JP_PP_PlanLineT_ID)
 	{
-		if (JP_PP_PlanLineT_ID < 1) 
+		if (JP_PP_PlanLineT_ID < 1)
 			set_Value (COLUMNNAME_JP_PP_PlanLineT_ID, null);
-		else 
+		else
 			set_Value (COLUMNNAME_JP_PP_PlanLineT_ID, Integer.valueOf(JP_PP_PlanLineT_ID));
 	}
 
 	/** Get PP Plan Line Template.
 		@return JPIERE-0501:JPBP
 	  */
-	public int getJP_PP_PlanLineT_ID () 
+	public int getJP_PP_PlanLineT_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_PlanLineT_ID);
 		if (ii == null)
@@ -268,18 +298,19 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set PP Plan Line.
-		@param JP_PP_PlanLine_ID PP Plan Line	  */
+		@param JP_PP_PlanLine_ID PP Plan Line
+	*/
 	public void setJP_PP_PlanLine_ID (int JP_PP_PlanLine_ID)
 	{
-		if (JP_PP_PlanLine_ID < 1) 
+		if (JP_PP_PlanLine_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLine_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_PlanLine_ID, Integer.valueOf(JP_PP_PlanLine_ID));
 	}
 
 	/** Get PP Plan Line.
 		@return PP Plan Line	  */
-	public int getJP_PP_PlanLine_ID () 
+	public int getJP_PP_PlanLine_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_PlanLine_ID);
 		if (ii == null)
@@ -288,7 +319,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set PP Plan Line(UU).
-		@param JP_PP_PlanLine_UU PP Plan Line(UU)	  */
+		@param JP_PP_PlanLine_UU PP Plan Line(UU)
+	*/
 	public void setJP_PP_PlanLine_UU (String JP_PP_PlanLine_UU)
 	{
 		set_Value (COLUMNNAME_JP_PP_PlanLine_UU, JP_PP_PlanLine_UU);
@@ -296,32 +328,32 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get PP Plan Line(UU).
 		@return PP Plan Line(UU)	  */
-	public String getJP_PP_PlanLine_UU () 
+	public String getJP_PP_PlanLine_UU()
 	{
 		return (String)get_Value(COLUMNNAME_JP_PP_PlanLine_UU);
 	}
 
 	public I_JP_PP_Plan getJP_PP_Plan() throws RuntimeException
-    {
-		return (I_JP_PP_Plan)MTable.get(getCtx(), I_JP_PP_Plan.Table_Name)
-			.getPO(getJP_PP_Plan_ID(), get_TrxName());	}
+	{
+		return (I_JP_PP_Plan)MTable.get(getCtx(), I_JP_PP_Plan.Table_ID)
+			.getPO(getJP_PP_Plan_ID(), get_TrxName());
+	}
 
 	/** Set PP Plan.
-		@param JP_PP_Plan_ID 
-		JPIERE-0501:JPBP
-	  */
+		@param JP_PP_Plan_ID JPIERE-0501:JPBP
+	*/
 	public void setJP_PP_Plan_ID (int JP_PP_Plan_ID)
 	{
-		if (JP_PP_Plan_ID < 1) 
+		if (JP_PP_Plan_ID < 1)
 			set_ValueNoCheck (COLUMNNAME_JP_PP_Plan_ID, null);
-		else 
+		else
 			set_ValueNoCheck (COLUMNNAME_JP_PP_Plan_ID, Integer.valueOf(JP_PP_Plan_ID));
 	}
 
 	/** Get PP Plan.
 		@return JPIERE-0501:JPBP
 	  */
-	public int getJP_PP_Plan_ID () 
+	public int getJP_PP_Plan_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_JP_PP_Plan_ID);
 		if (ii == null)
@@ -330,7 +362,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Process Now.
-		@param JP_Processing1 Process Now	  */
+		@param JP_Processing1 Process Now
+	*/
 	public void setJP_Processing1 (String JP_Processing1)
 	{
 		set_Value (COLUMNNAME_JP_Processing1, JP_Processing1);
@@ -338,13 +371,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Process Now.
 		@return Process Now	  */
-	public String getJP_Processing1 () 
+	public String getJP_Processing1()
 	{
 		return (String)get_Value(COLUMNNAME_JP_Processing1);
 	}
 
 	/** Set Process Now.
-		@param JP_Processing2 Process Now	  */
+		@param JP_Processing2 Process Now
+	*/
 	public void setJP_Processing2 (String JP_Processing2)
 	{
 		set_Value (COLUMNNAME_JP_Processing2, JP_Processing2);
@@ -352,13 +386,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Process Now.
 		@return Process Now	  */
-	public String getJP_Processing2 () 
+	public String getJP_Processing2()
 	{
 		return (String)get_Value(COLUMNNAME_JP_Processing2);
 	}
 
 	/** Set Process Now.
-		@param JP_Processing3 Process Now	  */
+		@param JP_Processing3 Process Now
+	*/
 	public void setJP_Processing3 (String JP_Processing3)
 	{
 		set_Value (COLUMNNAME_JP_Processing3, JP_Processing3);
@@ -366,13 +401,14 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Process Now.
 		@return Process Now	  */
-	public String getJP_Processing3 () 
+	public String getJP_Processing3()
 	{
 		return (String)get_Value(COLUMNNAME_JP_Processing3);
 	}
 
 	/** Set Quantity Used(Fact).
-		@param JP_QtyUsedFact Quantity Used(Fact)	  */
+		@param JP_QtyUsedFact Quantity Used(Fact)
+	*/
 	public void setJP_QtyUsedFact (BigDecimal JP_QtyUsedFact)
 	{
 		set_Value (COLUMNNAME_JP_QtyUsedFact, JP_QtyUsedFact);
@@ -380,7 +416,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Quantity Used(Fact).
 		@return Quantity Used(Fact)	  */
-	public BigDecimal getJP_QtyUsedFact () 
+	public BigDecimal getJP_QtyUsedFact()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_JP_QtyUsedFact);
 		if (bd == null)
@@ -389,9 +425,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Line No.
-		@param Line 
-		Unique line for this document
-	  */
+		@param Line Unique line for this document
+	*/
 	public void setLine (int Line)
 	{
 		set_ValueNoCheck (COLUMNNAME_Line, Integer.valueOf(Line));
@@ -400,7 +435,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Line No.
 		@return Unique line for this document
 	  */
-	public int getLine () 
+	public int getLine()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_Line);
 		if (ii == null)
@@ -409,26 +444,26 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	public I_M_AttributeSetInstance getM_AttributeSetInstance() throws RuntimeException
-    {
-		return (I_M_AttributeSetInstance)MTable.get(getCtx(), I_M_AttributeSetInstance.Table_Name)
-			.getPO(getM_AttributeSetInstance_ID(), get_TrxName());	}
+	{
+		return (I_M_AttributeSetInstance)MTable.get(getCtx(), I_M_AttributeSetInstance.Table_ID)
+			.getPO(getM_AttributeSetInstance_ID(), get_TrxName());
+	}
 
 	/** Set Attribute Info.
-		@param M_AttributeSetInstance_ID 
-		Product Attribute Set Instance
-	  */
+		@param M_AttributeSetInstance_ID Product Attribute Set Instance
+	*/
 	public void setM_AttributeSetInstance_ID (int M_AttributeSetInstance_ID)
 	{
-		if (M_AttributeSetInstance_ID < 0) 
+		if (M_AttributeSetInstance_ID < 0)
 			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, null);
-		else 
+		else
 			set_Value (COLUMNNAME_M_AttributeSetInstance_ID, Integer.valueOf(M_AttributeSetInstance_ID));
 	}
 
 	/** Get Attribute Info.
 		@return Product Attribute Set Instance
 	  */
-	public int getM_AttributeSetInstance_ID () 
+	public int getM_AttributeSetInstance_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_AttributeSetInstance_ID);
 		if (ii == null)
@@ -437,26 +472,26 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	public org.compiere.model.I_M_Locator getM_Locator() throws RuntimeException
-    {
-		return (org.compiere.model.I_M_Locator)MTable.get(getCtx(), org.compiere.model.I_M_Locator.Table_Name)
-			.getPO(getM_Locator_ID(), get_TrxName());	}
+	{
+		return (org.compiere.model.I_M_Locator)MTable.get(getCtx(), org.compiere.model.I_M_Locator.Table_ID)
+			.getPO(getM_Locator_ID(), get_TrxName());
+	}
 
 	/** Set Locator.
-		@param M_Locator_ID 
-		Warehouse Locator
-	  */
+		@param M_Locator_ID Warehouse Locator
+	*/
 	public void setM_Locator_ID (int M_Locator_ID)
 	{
-		if (M_Locator_ID < 1) 
+		if (M_Locator_ID < 1)
 			set_Value (COLUMNNAME_M_Locator_ID, null);
-		else 
+		else
 			set_Value (COLUMNNAME_M_Locator_ID, Integer.valueOf(M_Locator_ID));
 	}
 
 	/** Get Locator.
 		@return Warehouse Locator
 	  */
-	public int getM_Locator_ID () 
+	public int getM_Locator_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_Locator_ID);
 		if (ii == null)
@@ -465,26 +500,26 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	public org.compiere.model.I_M_Product getM_Product() throws RuntimeException
-    {
-		return (org.compiere.model.I_M_Product)MTable.get(getCtx(), org.compiere.model.I_M_Product.Table_Name)
-			.getPO(getM_Product_ID(), get_TrxName());	}
+	{
+		return (org.compiere.model.I_M_Product)MTable.get(getCtx(), org.compiere.model.I_M_Product.Table_ID)
+			.getPO(getM_Product_ID(), get_TrxName());
+	}
 
 	/** Set Product.
-		@param M_Product_ID 
-		Product, Service, Item
-	  */
+		@param M_Product_ID Product, Service, Item
+	*/
 	public void setM_Product_ID (int M_Product_ID)
 	{
-		if (M_Product_ID < 1) 
+		if (M_Product_ID < 1)
 			set_Value (COLUMNNAME_M_Product_ID, null);
-		else 
+		else
 			set_Value (COLUMNNAME_M_Product_ID, Integer.valueOf(M_Product_ID));
 	}
 
 	/** Get Product.
 		@return Product, Service, Item
 	  */
-	public int getM_Product_ID () 
+	public int getM_Product_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_M_Product_ID);
 		if (ii == null)
@@ -493,9 +528,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Movement Quantity.
-		@param MovementQty 
-		Quantity of a product moved.
-	  */
+		@param MovementQty Quantity of a product moved.
+	*/
 	public void setMovementQty (BigDecimal MovementQty)
 	{
 		set_Value (COLUMNNAME_MovementQty, MovementQty);
@@ -504,7 +538,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Movement Quantity.
 		@return Quantity of a product moved.
 	  */
-	public BigDecimal getMovementQty () 
+	public BigDecimal getMovementQty()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_MovementQty);
 		if (bd == null)
@@ -513,9 +547,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Planned Quantity.
-		@param PlannedQty 
-		Planned quantity for this project
-	  */
+		@param PlannedQty Planned quantity for this project
+	*/
 	public void setPlannedQty (BigDecimal PlannedQty)
 	{
 		set_Value (COLUMNNAME_PlannedQty, PlannedQty);
@@ -524,7 +557,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Planned Quantity.
 		@return Planned quantity for this project
 	  */
-	public BigDecimal getPlannedQty () 
+	public BigDecimal getPlannedQty()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_PlannedQty);
 		if (bd == null)
@@ -533,9 +566,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Processed.
-		@param Processed 
-		The document has been processed
-	  */
+		@param Processed The document has been processed
+	*/
 	public void setProcessed (boolean Processed)
 	{
 		set_Value (COLUMNNAME_Processed, Boolean.valueOf(Processed));
@@ -544,7 +576,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Processed.
 		@return The document has been processed
 	  */
-	public boolean isProcessed () 
+	public boolean isProcessed()
 	{
 		Object oo = get_Value(COLUMNNAME_Processed);
 		if (oo != null) 
@@ -557,9 +589,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Available Quantity.
-		@param QtyAvailable 
-		Available Quantity (On Hand - Reserved)
-	  */
+		@param QtyAvailable Available Quantity (On Hand - Reserved)
+	*/
 	public void setQtyAvailable (BigDecimal QtyAvailable)
 	{
 		throw new IllegalArgumentException ("QtyAvailable is virtual column");	}
@@ -567,7 +598,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	/** Get Available Quantity.
 		@return Available Quantity (On Hand - Reserved)
 	  */
-	public BigDecimal getQtyAvailable () 
+	public BigDecimal getQtyAvailable()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_QtyAvailable);
 		if (bd == null)
@@ -576,7 +607,8 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 	}
 
 	/** Set Quantity Used.
-		@param QtyUsed Quantity Used	  */
+		@param QtyUsed Quantity Used
+	*/
 	public void setQtyUsed (BigDecimal QtyUsed)
 	{
 		set_Value (COLUMNNAME_QtyUsed, QtyUsed);
@@ -584,7 +616,7 @@ public class X_JP_PP_PlanLine extends PO implements I_JP_PP_PlanLine, I_Persiste
 
 	/** Get Quantity Used.
 		@return Quantity Used	  */
-	public BigDecimal getQtyUsed () 
+	public BigDecimal getQtyUsed()
 	{
 		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_QtyUsed);
 		if (bd == null)

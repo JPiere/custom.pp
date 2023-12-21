@@ -26,14 +26,20 @@ import java.util.logging.Level;
 
 import org.adempiere.exceptions.NegativeInventoryDisallowedException;
 import org.compiere.model.I_M_AttributeSet;
+import org.compiere.model.I_M_Movement;
+import org.compiere.model.I_M_MovementLine;
+import org.compiere.model.I_M_MovementLineMA;
 import org.compiere.model.I_M_Production;
 import org.compiere.model.I_M_ProductionLine;
 import org.compiere.model.I_M_ProductionLineMA;
 import org.compiere.model.MAttributeSetInstance;
 import org.compiere.model.MDocType;
 import org.compiere.model.MFactAcct;
+import org.compiere.model.MMovement;
+import org.compiere.model.MMovementConfirm;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MProduct;
+import org.compiere.model.MProduction;
 import org.compiere.model.MProductionLine;
 import org.compiere.model.MStorageOnHand;
 import org.compiere.model.MSysConfig;
@@ -53,7 +59,8 @@ import org.compiere.util.Util;
 
 /**
  * JPIERE-0501:JPiere PP Fact
- *
+ * JPIERE-0609 Work Process Management and Create Movement doc from PP Doc
+ * 
  * @author Hideaki Hagiwara(h.hagiwara@oss-erp.co.jp)
  *
  */
@@ -86,6 +93,8 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
+		/** Common check */ 
+		
 		//SetAD_Org_ID
 		if(newRecord)
 		{
@@ -101,39 +110,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				return false;
 			}
 		}
-
-		//Set M_Product_ID
-		if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_M_Product_ID) || getM_Product_ID() == 0)
-		{
-
-			setM_Product_ID(getParent().getM_Product_ID());
-		}
-
-		//Set C_UOM_ID
-		if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_C_UOM_ID) || getC_UOM_ID() == 0)
-		{
-			MProduct product = MProduct.get(getM_Product_ID());
-			if(product.getC_UOM_ID() != getC_UOM_ID())
-			{
-				setC_UOM_ID(product.getC_UOM_ID());
-			}
-		}
-
-		//Set JP_PP_Workload_UOM_ID
-		if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_JP_PP_Workload_UOM_ID) || getJP_PP_Workload_UOM_ID() == 0)
-		{
-			setJP_PP_Workload_UOM_ID(getParent().getJP_PP_Workload_UOM_ID());
-		}
-
-
-		//Rounding Production Qty
-		if(newRecord || is_ValueChanged(MPPPlan.COLUMNNAME_ProductionQty))
-		{
-			boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
-			MUOM uom = MUOM.get(getC_UOM_ID());
-			setProductionQty(getProductionQty().setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP));
-		}
-
+		
 		//Check Doc Type
 		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
 		{
@@ -205,7 +182,63 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				}
 			}
 		}
+		
+		
+		/** Work Process Type individual Check */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			//Initialize
+			setM_Product_ID(0);
+			setM_Locator_ID(0);
+			setUPC(null);
+			setProductionQty(Env.ZERO);
+			setC_UOM_ID(0);
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			//Set M_Product_ID
+			if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_M_Product_ID) || getM_Product_ID() == 0)
+			{
 
+				setM_Product_ID(getParent().getM_Product_ID());
+			}
+
+			//Set C_UOM_ID
+			if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_C_UOM_ID) || getC_UOM_ID() == 0)
+			{
+				MProduct product = MProduct.get(getM_Product_ID());
+				if(product.getC_UOM_ID() != getC_UOM_ID())
+				{
+					setC_UOM_ID(product.getC_UOM_ID());
+				}
+			}	
+			
+			//Set JP_PP_Workload_UOM_ID
+			if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_JP_PP_Workload_UOM_ID) || getJP_PP_Workload_UOM_ID() == 0)
+			{
+				setJP_PP_Workload_UOM_ID(getParent().getJP_PP_Workload_UOM_ID());
+			}
+
+			//Rounding Production Qty
+			if(newRecord || is_ValueChanged(MPPPlan.COLUMNNAME_ProductionQty))
+			{
+				boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
+				MUOM uom = MUOM.get(getC_UOM_ID());
+				setProductionQty(getProductionQty().setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP));
+			}
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			//Initialize
+			setM_Product_ID(0);
+			setM_Locator_ID(0);
+			setUPC(null);
+			setProductionQty(Env.ZERO);
+			setC_UOM_ID(0);
+			
+		}
+		
 		return true;
 	}
 
@@ -216,45 +249,13 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 	{
 		if(!success)
 			return false;
-
-		//Update Line Qty
-		if(!newRecord && is_ValueChanged(MPPFact.COLUMNNAME_ProductionQty))
-		{
-			boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
-			MUOM uom = null;
-			BigDecimal newQty = getProductionQty();
-			BigDecimal oldQty = (BigDecimal)get_ValueOld(MPPFact.COLUMNNAME_ProductionQty) ;
-			BigDecimal rate = Env.ONE;
-			if(oldQty != null && oldQty.compareTo(Env.ZERO) != 0)
-				rate = newQty.divide(oldQty, 4, RoundingMode.HALF_UP);
-
-			MPPFactLine[] lines = getPPFactLines(true, null);
-			for(MPPFactLine line : lines)
-			{
-				if(line.isEndProduct())
-				{
-					line.setMovementQty(newQty);
-				}else {
-					uom = MUOM.get(line.getC_UOM_ID());
-					oldQty = line.getQtyUsed();
-					if(oldQty.compareTo(Env.ZERO) == 0)
-					{
-						;//Noting to do because 0 * X = 0;
-					}else {
-						newQty = oldQty.multiply(rate).setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP);
-						line.setQtyUsed(newQty);
-					}
-				}
-				line.saveEx(get_TrxName());
-			}
-		}
-
+		
+		/** Common process */
 		//Update PP Plan JP_PP_Workload_Fact
 		if(newRecord || is_ValueChanged(MPPFact.COLUMNNAME_JP_PP_Workload_Fact))
 		{
 
 			int no = updateParentWorkloadFact(get_TrxName());
-
 			if (no != 1)
 			{
 					log.saveError("DBExecuteError", "MPPFact#afterSave() -> updateParentWorkloadFact()");
@@ -262,19 +263,67 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			}
 		}
 
-		//Update PP Plan JP_ProductionQtyFact
-		if(is_ValueChanged(COLUMNNAME_DocStatus))
+		/** Work Process Type individual process */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
 		{
-			int no = updateParentProductionQtyFact(get_TrxName());
-			if (no != 1)
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+		
+			//Update Line Qty
+			if(!newRecord && is_ValueChanged(MPPFact.COLUMNNAME_ProductionQty))
 			{
-					m_processMsg = Msg.getMsg(getCtx(), "DBExecuteError") + " : " +"MPPFact#afterSave() -> updateParentProductionQtyFact()";
-					return false;
+				boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
+				MUOM uom = null;
+				BigDecimal newQty = getProductionQty();
+				BigDecimal oldQty = (BigDecimal)get_ValueOld(MPPFact.COLUMNNAME_ProductionQty) ;
+				BigDecimal rate = Env.ONE;
+				if(oldQty != null && oldQty.compareTo(Env.ZERO) != 0)
+					rate = newQty.divide(oldQty, 4, RoundingMode.HALF_UP);
+	
+				MPPFactLine[] lines = getPPFactLines(true, null);
+				for(MPPFactLine line : lines)
+				{
+					if(line.isEndProduct())
+					{
+						line.setMovementQty(newQty);
+					}else {
+						uom = MUOM.get(line.getC_UOM_ID());
+						oldQty = line.getQtyUsed();
+						if(oldQty.compareTo(Env.ZERO) == 0)
+						{
+							;//Noting to do because 0 * X = 0;
+						}else {
+							newQty = oldQty.multiply(rate).setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP);
+							line.setQtyUsed(newQty);
+						}
+					}
+					line.saveEx(get_TrxName());
+				}
 			}
-
-			//Update PP Plan Line Fact Qty
-			updatePlanLineQtyFact(get_TrxName());
+	
+			//Update PP Plan JP_ProductionQtyFact
+			if(is_ValueChanged(COLUMNNAME_DocStatus))
+			{
+				int no = updateParentProductionQtyFact(get_TrxName());
+				if (no != 1)
+				{
+						m_processMsg = Msg.getMsg(getCtx(), "DBExecuteError") + " : " +"MPPFact#afterSave() -> updateParentProductionQtyFact()";
+						return false;
+				}
+	
+				//Update PP Plan Line Fact Qty
+				updatePlanLineQtyFact(get_TrxName());
+			}
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			//Update PP MM Plan Line Fact Qty
+			updateMMPlanLineQtyFact(get_TrxName());
+			
 		}
+		
 		return true;
 	}
 
@@ -293,6 +342,22 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 		return true;
 	}
 
+	private String JP_PP_WorkProcessType = null;
+	
+	public String getJP_PP_WorkProcessType() 
+	{
+		
+		if(!Util.isEmpty(JP_PP_WorkProcessType))
+			return JP_PP_WorkProcessType;
+		
+		 JP_PP_WorkProcessType = getParent().getJP_PP_WorkProcessType();
+		if(Util.isEmpty(JP_PP_WorkProcessType))
+			JP_PP_WorkProcessType =  MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction;
+		
+		return JP_PP_WorkProcessType;
+	}
+	
+	
 	private int updateParentWorkloadFact(String trxName)
 	{
 		String sql = "UPDATE JP_PP_Plan SET JP_PP_Workload_Fact=(SELECT COALESCE(SUM(JP_PP_Workload_Fact),0) FROM JP_PP_Fact WHERE JP_PP_Plan_ID =?) "
@@ -343,6 +408,20 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 		return no;
 	}
 
+	private int updateMMPlanLineQtyFact(String trxName)
+	{
+		String sql = "UPDATE JP_PP_MM_PlanLine pl "
+				+ " SET JP_MovementQtyFact = (SELECT COALESCE(SUM(fl.MovementQty),0) "
+				+ " FROM JP_PP_MM_FactLine fl INNER JOIN JP_PP_Fact f ON (fl.JP_PP_Fact_ID=f.JP_PP_Fact_ID) "
+				+ " WHERE f.JP_PP_Plan_ID =? AND f.DocStatus in ('CO','CL') AND fl.JP_PP_MM_PlanLine_ID=pl.JP_PP_MM_PlanLine_ID) "
+				+ " WHERE pl.JP_PP_Plan_ID= ? " ;
+
+		int no = DB.executeUpdate(sql
+						, new Object[]{ getJP_PP_Plan_ID(), getJP_PP_Plan_ID()}
+						, false, trxName, 0);
+		return no;
+	}
+	
 	/**
 	 * 	Get Document Info
 	 *	@return document info (untranslated)
@@ -429,12 +508,30 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			return DocAction.STATUS_Invalid;
 		}
 
-		if(!isHaveEndProduct())
+		
+		/** Work Process Type individual process */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
 		{
-			//PP Lines does not contain End Product
-			m_processMsg = Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
-			return DocAction.STATUS_Invalid;
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			if(!isHaveEndProduct())
+			{
+				//PP Lines does not contain End Product
+				m_processMsg = Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
+				return DocAction.STATUS_Invalid;
+			}
+
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			;
 		}
+		
+		
+
 
 
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_PREPARE);
@@ -503,11 +600,59 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 //			return DocAction.STATUS_Invalid;
 //		}
 
+		/** Work Process Type individual process */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			m_processMsg = createProduction();
+
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			m_processMsg = createMovement();
+		}
+
+
+		/** Common complete process */
+		Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+		if(getJP_PP_Start() == null)
+		{
+			setJP_PP_Start(now);
+			setJP_PP_StartProcess("Y");
+		}
+
+
+		if(getJP_PP_End() == null)
+		{
+			setJP_PP_End(now);
+			setJP_PP_EndProcess("Y");
+		}
+
+		setJP_PP_Status(JP_PP_STATUS_Completed);
+
+		//	User Validation
+		String valid = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
+		if (valid != null)
+		{
+			m_processMsg = valid;
+			return DocAction.STATUS_Invalid;
+		}
+
+		setProcessed(true);
+		setDocAction(DOCACTION_Close);
+		return DocAction.STATUS_Completed;
+	}	//	completeIt
+
+	private String createProduction()
+	{
 		if(!isHaveEndProduct())
 		{
 			//PP Lines does not contain End Product
-			m_processMsg = Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
-			return DocAction.STATUS_Invalid;
+			return Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
 		}
 
 
@@ -553,10 +698,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							String msg1 = Msg.getElement(Env.getCtx(), "JP_PP_FactLineMA_ID")+" - " + Msg.getElement(Env.getCtx(), "MovementQty");
 							String msg = Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1});
 
-							//m_processMsg = "@Line@ " + line.getLine() + ": @FillMandatory@ @M_AttributeSetInstance_ID@";
-							m_processMsg = Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID) + " : " + line.getLine()
-											+ " - " + msg;
-							return DocAction.STATUS_Invalid;
+							return Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID) + " : " + line.getLine() + " - " + msg;
 						}
 					}
 				}
@@ -583,8 +725,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 						if(qtyOnLineMA.compareTo(movementQty) != 0)
 						{
 							//The Qty of attribute information tab and the Qty of Line tab do not match.
-							m_processMsg = "@JP_PP_DontMatchQtyASI@ " + line.getLine();
-							return DOCSTATUS_Invalid;
+							return "@JP_PP_DontMatchQtyASI@ " + line.getLine();
 						}
 					}
 
@@ -608,11 +749,10 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 								if(storageOnHand == null)
 								{
 									MAttributeSetInstance asi =   new MAttributeSetInstance(getCtx(), ma.getM_AttributeSetInstance_ID(), get_TrxName());
-									m_processMsg = Msg.getMsg(getCtx(), "InsufficientQtyAvailable") +  asi.getDescription()
+									return Msg.getMsg(getCtx(), "InsufficientQtyAvailable") +  asi.getDescription()
 											+ " - " + Msg.getElement(getCtx(), "DateMaterialPolicy") + " " + ma.getDateMaterialPolicy().toString().substring(0, 10)
 											+ " - " +  Msg.getElement(getCtx(), "QtyOnHand") + " " + " 0 ";
-									return DOCSTATUS_Invalid;
-
+									
 								}else {
 
 									movementQtyMA = movementQtyMA.add(ma.getMovementQty());
@@ -625,11 +765,12 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							if(qtyOnhand.compareTo(movementQtyMA) >=0 )
 							{
 								;//Noting to do;
+								
 							}else {
-								m_processMsg = Msg.getMsg(getCtx(), "InsufficientQtyAvailable")
+								
+								return Msg.getMsg(getCtx(), "InsufficientQtyAvailable")
 										+  Msg.getElement(getCtx(), "JP_PP_FactLine_ID")+" : "+line.getLine()
 										+ " - "+  Msg.getElement(getCtx(), "QtyOnHand") + " " + qtyOnhand.toString();
-								return DOCSTATUS_Invalid;
 							}
 
 						}else {
@@ -642,20 +783,20 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							if(storageOnHand == null)
 							{
 								MAttributeSetInstance asi =   new MAttributeSetInstance(getCtx(), line.getM_AttributeSetInstance_ID(), get_TrxName());
-								m_processMsg = Msg.getMsg(getCtx(), "InsufficientQtyAvailable")
+								return Msg.getMsg(getCtx(), "InsufficientQtyAvailable")
 										+  " - " + Msg.getElement(getCtx(), "JP_PP_FactLine_ID")+" : "+line.getLine()
 										+  " - " + asi.getDescription() + " - "+  Msg.getElement(getCtx(), "QtyOnHand") + " 0 ";
-								return DOCSTATUS_Invalid;
+								
 							}else {
 
 								if(storageOnHand.getQtyOnHand().compareTo(line.getQtyUsed()) >=0 )
 								{
 									;//Noting to do;
 								}else {
+									
 									MAttributeSetInstance asi =   new MAttributeSetInstance(getCtx(), line.getM_AttributeSetInstance_ID(), get_TrxName());
-									m_processMsg = Msg.getMsg(getCtx(), "InsufficientQtyAvailable") + asi.getDescription()
+									return Msg.getMsg(getCtx(), "InsufficientQtyAvailable") + asi.getDescription()
 											+ " - "+  Msg.getElement(getCtx(), "QtyOnHand") + " " + storageOnHand.getQtyOnHand().toString();
-									return DOCSTATUS_Invalid;
 								}
 							}
 
@@ -675,8 +816,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 		if (errors.toString().length() > 0)
 		{
-			m_processMsg = errors.toString();
-			return DocAction.STATUS_Invalid;
+			return errors.toString();
 		}
 
 		MPPFactLineMA[] ppFactLineMAs = null;
@@ -713,14 +853,16 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 				//IDEMPIERE-5746 & JPIERE-0606
 				MDocType ppFact_DocType = MDocType.get(getC_DocType_ID());
-				if(ppFact_DocType.get_ValueAsInt("JP_ProductionDocType_ID") > 0)
+				if(ppFact_DocType.get_ValueAsInt("JP_ProductionDocType_ID") > 0) {
 					pp.set_ValueNoCheck("C_DocType_ID", ppFact_DocType.get_ValueAsInt("JP_ProductionDocType_ID"));
+				}else {
+					pp.set_ValueNoCheck("C_DocType_ID", MDocType.getDocType(MDocType.DOCBASETYPE_MaterialProduction));
+				}
 				
 				if(!pp.save(get_TrxName()))
 				{
-					m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_M_Production_ID)
+					return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_M_Production_ID)
 											+ " - " + pp.get_Logger().getName();
-					return DOCSTATUS_Invalid;
 				}
 				setM_Production_ID(pp.get_ID());
 				setJP_PP_Status(MPPFact.JP_PP_STATUS_Completed);
@@ -744,11 +886,10 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 					ppLine.set_ValueNoCheck(MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID, ppFactLine.getJP_PP_FactLine_ID());
 					if(!ppLine.save(get_TrxName()))
 					{
-						m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_ProductionLine.COLUMNNAME_M_ProductionLine_ID)
+						return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_ProductionLine.COLUMNNAME_M_ProductionLine_ID)
 											+ " - "+ Msg.getElement(getCtx(), I_M_ProductionLine.COLUMNNAME_Line)
 											+ " : "  + ppLine.get_ValueAsInt(I_M_ProductionLine.COLUMNNAME_Line)
 											+ " - "  + ppLine.get_Logger().getName();
-								return DOCSTATUS_Invalid;
 					}
 
 					ppFactLineMAs = ppFactLine.getPPFactLineMAs();
@@ -763,11 +904,10 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 						ppLineMA.set_ValueNoCheck(I_M_ProductionLineMA.COLUMNNAME_MovementQty, ppFactLineMA.getMovementQty());
 						if(!ppLineMA.save(get_TrxName()))
 						{
-							m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_ProductionLineMA.COLUMNNAME_M_AttributeSetInstance_ID)
+							return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_ProductionLineMA.COLUMNNAME_M_AttributeSetInstance_ID)
 										+ " - "+ Msg.getElement(getCtx(), I_M_ProductionLine.COLUMNNAME_Line)
 										+ " : "  + ppLine.get_ValueAsInt(I_M_ProductionLine.COLUMNNAME_Line)
 										+ " - "  + ppLineMA.get_Logger().getName();
-										return DOCSTATUS_Invalid;
 						}
 					}
 				}
@@ -777,27 +917,24 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				{
 					if(!doc.processIt(DocAction.ACTION_Complete))
 					{
-						m_processMsg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
+						return Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
 														+ " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_DocAction)
 														+ " : "+ DocAction.ACTION_Complete
 														+ " - "+ doc.getProcessMsg();
-						return DocAction.STATUS_Invalid;
 					}
 					
 					if(!pp.save(get_TrxName()))
 					{
-						m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
+						return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
 														+ " - "+ pp.get_ValueAsString(COLUMNNAME_DocumentNo);
-									return DOCSTATUS_Invalid;
-					}					
+					}	
 					
 				} catch (Exception e) {
 
-					m_processMsg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
+					return Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Production_ID)
 										+ " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_DocAction)
 										+ " : "+ DocAction.ACTION_Complete
 										+ " - "+  doc.getProcessMsg() + " - " + e.getMessage();
-						return DocAction.STATUS_Invalid;
 				}
 
 
@@ -828,11 +965,10 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							}
 							if(!ppFactLine.save(get_TrxName()))
 							{
-								m_processMsg = Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID)
+								return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID)
 														+ " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_Line)
 														+ " : "  + ppFactLine.getLine()
 														+ " - "  + ppFactLine.get_Logger().getName();
-								return DOCSTATUS_Invalid;
 							}
 							break;
 						}
@@ -841,38 +977,163 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				}//for
 
 			}
-		}
+		}//if(getM_Production_ID() == 0)
+		
+		return null;
+	}
+	
+	
+	private String createMovement()
+	{
 
-
-		Timestamp now = Timestamp.valueOf(LocalDateTime.now());
-		if(getJP_PP_Start() == null)
+		MPPMMFactLine[] ppMMFactLines = getPPMMFactLines(true, null);
+		
+		if(getM_Movement_ID() == 0)
 		{
-			setJP_PP_Start(now);
-			setJP_PP_StartProcess("Y");
-		}
+			if(ppMMFactLines.length > 0)
+			{
+				MTable m_table_Movement = MTable.get(getCtx(), I_M_Movement.Table_Name);
+				MTable m_table_MovementLine = MTable.get(getCtx(), I_M_MovementLine.Table_Name);
+				MTable m_table_MovementLineMA = MTable.get(getCtx(), I_M_MovementLineMA.Table_Name);
+
+				PO mm = m_table_Movement.getPO(0, get_TrxName());
+				PO.copyValues(this, mm);
+				mm.setAD_Org_ID(getAD_Org_ID());
+				mm.set_ValueNoCheck(MPPFact.COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
+				mm.set_ValueNoCheck(I_M_Movement.COLUMNNAME_DocumentNo, null);
+				mm.set_ValueNoCheck(I_M_Movement.COLUMNNAME_MovementDate ,getMovementDate());
+				if(getParent().getJP_WarehouseFrom_ID() < 0)
+					mm.set_ValueNoCheck("JP_WarehouseFrom_ID", getParent().getJP_WarehouseFrom_ID());
+				if(getParent().getJP_WarehouseTo_ID() > 0)
+					mm.set_ValueNoCheck("JP_WarehouseTo_ID", getParent().getJP_WarehouseTo_ID());
+				if(getParent().getJP_WarehouseNext_ID() > 0)
+					mm.set_ValueNoCheck("JP_WarehouseNext_ID", getParent().getJP_WarehouseNext_ID());
+				if(getParent().getJP_WarehouseDst_ID() > 0)
+					mm.set_ValueNoCheck("JP_WarehouseDst_ID", getParent().getJP_WarehouseDst_ID());
+				if(getParent().getJP_PhysicalWarehouseFrom_ID() > 0)
+					mm.set_ValueNoCheck("JP_PhysicalWarehouseFrom_ID", getParent().getJP_PhysicalWarehouseFrom_ID());
+				if(getParent().getJP_PhysicalWarehouseTo_ID() > 0)
+					mm.set_ValueNoCheck("JP_PhysicalWarehouseTo_ID", getParent().getJP_PhysicalWarehouseTo_ID());
+				if(getParent().getJP_PhysicalWarehouseNext_ID() > 0)
+					mm.set_ValueNoCheck("JP_PhysicalWarehouseNext_ID", getParent().getJP_PhysicalWarehouseNext_ID());
+				if(getParent().getJP_PhysicalWarehouseDst_ID() > 0)
+					mm.set_ValueNoCheck("JP_PhysicalWarehouseDst_ID", getParent().getJP_PhysicalWarehouseDst_ID());
+				mm.set_ValueNoCheck("IsRecordRouteJP", getParent().isRecordRouteJP()?"Y":"N");
+				if(getParent().isRecordRouteJP())
+				{
+					mm.set_ValueNoCheck("JP_WarehouseDep_ID", getParent().getJP_WarehouseFrom_ID());
+					mm.set_ValueNoCheck("JP_PhysicalWarehouseDep_ID", getParent().getJP_PhysicalWarehouseFrom_ID());
+					mm.set_ValueNoCheck("JP_MovementDateDst", getMovementDate());
+				}
+				mm.setIsActive(true);
+				mm.set_ValueNoCheck("Processed", "N");
+				mm.set_ValueNoCheck("Posted","N");
+				mm.set_ValueNoCheck(I_M_Movement.COLUMNNAME_DocStatus , DocAction.STATUS_Drafted);
+				mm.set_ValueNoCheck(I_M_Movement.COLUMNNAME_DocAction, DocAction.ACTION_Complete);
+
+				//IDEMPIERE-5746 & JPIERE-0606
+				MDocType ppFact_DocType = MDocType.get(getC_DocType_ID());
+				if(ppFact_DocType.get_ValueAsInt("JP_DocTypeMM_ID") > 0)
+				{
+					mm.set_ValueNoCheck("C_DocType_ID", ppFact_DocType.get_ValueAsInt("JP_DocTypeMM_ID"));
+				}else {
+					
+					mm.set_ValueNoCheck("C_DocType_ID", MDocType.getDocType(MDocType.DOCBASETYPE_MaterialMovement));
+				}
+				
+				if(!mm.save(get_TrxName()))
+				{
+					return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_Movement.COLUMNNAME_M_Movement_ID)
+											+ " - " + mm.get_Logger().getName();
+				}
+				setM_Movement_ID(mm.get_ID());
+				setJP_PP_Status(MPPFact.JP_PP_STATUS_Completed);
 
 
-		if(getJP_PP_End() == null)
-		{
-			setJP_PP_End(now);
-			setJP_PP_EndProcess("Y");
-		}
+				for(MPPMMFactLine ppMMFactLine : ppMMFactLines)
+				{
+					PO mmLine = m_table_MovementLine.getPO(0, get_TrxName());
+					PO.copyValues(ppMMFactLine, mmLine);
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_M_Movement_ID, mm.get_ValueAsInt(I_M_MovementLine.COLUMNNAME_M_Movement_ID));
+					mmLine.setAD_Org_ID(mm.getAD_Org_ID());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_Line, ppMMFactLine.getLine());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_M_Product_ID, ppMMFactLine.getM_Product_ID());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_M_Locator_ID, ppMMFactLine.getM_Locator_ID());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_M_AttributeSetInstance_ID, ppMMFactLine.getM_AttributeSetInstance_ID());
+					mmLine.set_ValueNoCheck("M_LocatorTo_ID", ppMMFactLine.getM_LocatorTo_ID());
+					mmLine.set_ValueNoCheck("M_AttributeSetInstanceTo_ID", ppMMFactLine.getM_AttributeSetInstanceTo_ID());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_MovementQty, ppMMFactLine.getMovementQty());
+					mmLine.set_ValueNoCheck(I_M_MovementLine.COLUMNNAME_Description, ppMMFactLine.getDescription());
+					mmLine.set_ValueNoCheck(MPPMMFactLine.COLUMNNAME_JP_PP_MM_FactLine_ID, ppMMFactLine.getJP_PP_MM_FactLine_ID());
+					if(!mmLine.save(get_TrxName()))
+					{
+						return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_MovementLine.COLUMNNAME_M_Movement_ID)
+											+ " - "+ Msg.getElement(getCtx(), I_M_MovementLine.COLUMNNAME_Line)
+											+ " : "  + mmLine.get_ValueAsInt(I_M_MovementLine.COLUMNNAME_Line)
+											+ " - "  + mmLine.get_Logger().getName();
+					}
+					
+					ppMMFactLine.setM_MovementLine_ID(mmLine.get_ValueAsInt(I_M_MovementLine.COLUMNNAME_M_MovementLine_ID));
+					if(!ppMMFactLine.save(get_TrxName()))
+					{
+						return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPMMFactLine.COLUMNNAME_JP_PP_MM_FactLine_ID)
+									+ " - "+ Msg.getElement(getCtx(), MPPMMFactLine.COLUMNNAME_Line)
+									+ " : "  + ppMMFactLine.get_ValueAsInt(MPPMMFactLine.COLUMNNAME_Line)
+									+ " - "  + ppMMFactLine.get_Logger().getName();
+					}
 
-		setJP_PP_Status(JP_PP_STATUS_Completed);
+					MPPMMFactLineMA[] ppMMFactLineMAs = ppMMFactLine.getPPMMFactLineMAs();
+					for(MPPMMFactLineMA ppMMFactLineMA : ppMMFactLineMAs)
+					{
+						PO mmLineMA = m_table_MovementLineMA.getPO(0, get_TrxName());
+						PO.copyValues(ppMMFactLineMA, mmLineMA);
+						mmLineMA.setAD_Org_ID(mmLine.getAD_Org_ID());
+						mmLineMA.set_ValueNoCheck(I_M_MovementLineMA.COLUMNNAME_M_MovementLine_ID, mmLine.get_ValueAsInt(I_M_MovementLine.COLUMNNAME_M_MovementLine_ID));
+						mmLineMA.set_ValueNoCheck(I_M_MovementLineMA.COLUMNNAME_M_AttributeSetInstance_ID, ppMMFactLineMA.getM_AttributeSetInstance_ID());
+						mmLineMA.set_ValueNoCheck(I_M_MovementLineMA.COLUMNNAME_DateMaterialPolicy, ppMMFactLineMA.getDateMaterialPolicy());
+						mmLineMA.set_ValueNoCheck(I_M_MovementLineMA.COLUMNNAME_MovementQty, ppMMFactLineMA.getMovementQty());
+						if(!mmLineMA.save(get_TrxName()))
+						{
+							return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), I_M_MovementLineMA.COLUMNNAME_M_AttributeSetInstance_ID)
+										+ " - "+ Msg.getElement(getCtx(), I_M_MovementLine.COLUMNNAME_Line)
+										+ " : "  + mmLine.get_ValueAsInt(I_M_MovementLine.COLUMNNAME_Line)
+										+ " - "  + mmLineMA.get_Logger().getName();
+						}
+					}
+				}
 
-		//	User Validation
-		String valid = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_COMPLETE);
-		if (valid != null)
-		{
-			m_processMsg = valid;
-			return DocAction.STATUS_Invalid;
-		}
+				DocAction doc = (DocAction)mm;
+				try
+				{
+					if(!doc.processIt(DocAction.ACTION_Complete))
+					{
+						return Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Movement_ID)
+														+ " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_DocAction)
+														+ " : "+ DocAction.ACTION_Complete
+														+ " - "+ doc.getProcessMsg();
+					}
+					
+					if(!mm.save(get_TrxName()))
+					{
+						return Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), COLUMNNAME_M_Movement_ID)
+														+ " - "+ mm.get_ValueAsString(COLUMNNAME_DocumentNo);
+					}	
+					
+				} catch (Exception e) {
 
-		setProcessed(true);
-		setDocAction(DOCACTION_Close);
-		return DocAction.STATUS_Completed;
-	}	//	completeIt
+					return Msg.getMsg(getCtx(), "JP_CouldNotCreate")+ " : " + Msg.getElement(getCtx(), COLUMNNAME_M_Movement_ID)
+										+ " - "+ Msg.getElement(getCtx(), I_M_Production.COLUMNNAME_DocAction)
+										+ " : "+ DocAction.ACTION_Complete
+										+ " - "+  doc.getProcessMsg() + " - " + e.getMessage();
+				}
 
+			}//if(ppMMFactLines.length > 0)
+			
+		}//if(getM_Production_ID() == 0)
+		
+		return null;
+	}
+	
 	/**
 	 * 	Set the definite document number after completed
 	 */
@@ -1072,27 +1333,208 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			return true;
 		}
 
-		MTable m_table_Production = MTable.get(getCtx(), I_M_Production.Table_Name);
-		PO po = m_table_Production.getPO(getM_Production_ID(), get_TrxName());
-
-		DocAction pp = (DocAction)po;
-		if(pp.getDocStatus().equals(STATUS_Completed))
+		/** Work Process Type individual Check */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
 		{
-			try
+			;//Noting to do.
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			MTable m_table_Production = MTable.get(getCtx(), I_M_Production.Table_Name);
+			PO po = m_table_Production.getPO(getM_Production_ID(), get_TrxName());
+	
+			DocAction pp = (DocAction)po;
+			if(pp.getDocStatus().equals(STATUS_Completed))
 			{
-				pp.processIt(DocAction);
-
-			} catch (Exception e) {
-
-				m_processMsg = pp.getProcessMsg();
+				try
+				{
+					if(!pp.processIt(DocAction))
+					{
+						m_processMsg = pp.getProcessMsg();
+						return false;
+					}
+	
+				} catch (Exception e) {
+	
+					m_processMsg = e.getMessage();
+					return false;
+				}
+				po.saveEx(get_TrxName());
+	
+				int reversal_ID = po.get_ValueAsInt("Reversal_ID");
+				PO reversalPP = m_table_Production.getPO(reversal_ID, get_TrxName());
+				reversalPP.set_ValueNoCheck(COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
+				reversalPP.saveEx(get_TrxName());
+				
+			}else if(pp.getDocStatus().equals(STATUS_Closed)) {
+				
+				//You cannot reverse, because Document status is not completed.
+				String msg = Msg.getMsg(getCtx(), "JP_CannotReverseForDocStatus");
+				m_processMsg = msg + " - " + Msg.getElement(getCtx(), MProduction.COLUMNNAME_M_Production_ID) + " : "+ pp.getDocumentNo();
 				return false;
+			
+			}else if(pp.getDocStatus().equals(STATUS_Voided) || pp.getDocStatus().equals(STATUS_Reversed) ) {
+				
+				int reversal_ID = po.get_ValueAsInt("Reversal_ID");
+				PO reversalPP = m_table_Production.getPO(reversal_ID, get_TrxName());
+				reversal_ID = reversalPP.get_ValueAsInt("Reversal_ID");
+				if(reversal_ID == 0)
+				{
+					reversalPP.set_ValueNoCheck(COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
+					reversalPP.saveEx(get_TrxName());
+				}
+				
+			}else {
+			
+				try
+				{
+					if(!pp.processIt(DOCACTION_Void))
+					{
+						m_processMsg = pp.getProcessMsg();
+						return false;
+					}
+	
+				} catch (Exception e) {
+	
+					m_processMsg = e.getMessage();
+					return false;
+				}
+				po.saveEx(get_TrxName());
 			}
-			po.saveEx(get_TrxName());
-
-			int reversal_ID = po.get_ValueAsInt("Reversal_ID");
-			PO reversalPP = m_table_Production.getPO(reversal_ID, get_TrxName());
-			reversalPP.set_ValueNoCheck(COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
-			reversalPP.saveEx(get_TrxName());
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			MTable m_table_Movement = MTable.get(getCtx(), I_M_Movement.Table_Name);
+			PO po = m_table_Movement.getPO(getM_Movement_ID(), get_TrxName());
+	
+			DocAction mm = (DocAction)po;
+			if(mm.getDocStatus().equals(STATUS_Completed))
+			{
+				try
+				{
+					if(!mm.processIt(DocAction))
+					{
+						m_processMsg = mm.getProcessMsg();
+						return false;
+					}
+	
+				} catch (Exception e) {
+	
+					m_processMsg = e.getMessage();
+					return false;
+				}
+				po.saveEx(get_TrxName());
+	
+				int reversal_ID = po.get_ValueAsInt("Reversal_ID");
+				PO reversalPPMM = m_table_Movement.getPO(reversal_ID, get_TrxName());
+				reversalPPMM.set_ValueNoCheck(COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
+				reversalPPMM.saveEx(get_TrxName());
+			
+			}else if(mm.getDocStatus().equals(STATUS_Closed)) {
+				
+				//You cannot reverse, because Document status is not completed.
+				String msg = Msg.getMsg(getCtx(), "JP_CannotReverseForDocStatus");
+				m_processMsg = msg + " - " + Msg.getElement(getCtx(), MMovement.COLUMNNAME_M_Movement_ID) + " : "+ mm.getDocumentNo();
+				return false;
+			
+			}else if(mm.getDocStatus().equals(STATUS_Voided) || mm.getDocStatus().equals(STATUS_Reversed) ) {
+				
+				int reversal_ID = po.get_ValueAsInt("Reversal_ID");
+				PO reversalPPMM = m_table_Movement.getPO(reversal_ID, get_TrxName());
+				reversal_ID = reversalPPMM.get_ValueAsInt("Reversal_ID");
+				if(reversal_ID == 0)
+				{
+					reversalPPMM.set_ValueNoCheck(COLUMNNAME_JP_PP_Fact_ID, getJP_PP_Fact_ID());
+					reversalPPMM.saveEx(get_TrxName());
+				}
+				
+			}else {
+				
+				MMovement m_Movement = (MMovement)po;
+				MMovementConfirm[] m_confirms = m_Movement.getConfirmations(true);
+				if(m_confirms.length == 0)
+				{
+					try 
+					{
+						if(!mm.processIt(DOCACTION_Void))
+						{
+							m_processMsg = mm.getProcessMsg();
+							return false;
+						}
+						
+					} catch (Exception e) {
+						
+						m_processMsg = e.getMessage();
+						return false;
+					}
+					po.saveEx(get_TrxName());
+					
+				}else {
+					
+					for(MMovementConfirm  m_confirm : m_confirms)
+					{
+						if(m_confirm.getDocStatus().equals(STATUS_Completed))
+						{
+							m_processMsg = Msg.getElement(getCtx(), MMovementConfirm.COLUMNNAME_M_MovementConfirm_ID) + " : "+ m_confirm.getDocumentNo() + " : " +Msg.getMsg(getCtx(), "completed");
+							return false;
+							
+						}else if(m_confirm.getDocStatus().equals(STATUS_Closed)) {
+							
+							//You cannot reverse, because Document status is not completed.
+							String msg = Msg.getMsg(getCtx(), "JP_CannotReverseForDocStatus");
+							m_processMsg = msg + " - " + Msg.getElement(getCtx(), MMovementConfirm.COLUMNNAME_M_MovementConfirm_ID) + " : "+ m_confirm.getDocumentNo();
+							return false;
+							
+						}else if(m_confirm.getDocStatus().equals(STATUS_Voided) || m_confirm.getDocStatus().equals(STATUS_Reversed) ) {
+							
+							;//Noting to do.
+						
+						}else {
+							
+							try 
+							{
+								if(!m_confirm.processIt(DOCACTION_Void))
+								{
+									m_processMsg = mm.getProcessMsg();
+									return false;
+								}
+								
+							} catch (Exception e) {
+								
+								m_processMsg = e.getMessage();
+								return false;
+							}
+							
+							m_confirm.saveEx(get_TrxName());
+						}
+						
+					}//for
+					
+					//Re query
+					m_Movement = new MMovement(getCtx(), m_Movement.getM_Movement_ID(), get_TrxName());
+					if( !m_Movement.getDocStatus().equals(STATUS_Voided)
+							&& !m_Movement.getDocStatus().equals(STATUS_Reversed))
+					{
+					
+						try 
+						{
+							if(!mm.processIt(DOCACTION_Void))
+							{
+								m_processMsg = mm.getProcessMsg();
+								return false;
+							}
+							
+						} catch (Exception e) {
+							
+							m_processMsg = e.getMessage();
+							return false;
+						}
+						po.saveEx(get_TrxName());
+					
+					}
+				}
+			}
 		}
 
 		return true;
@@ -1181,11 +1623,29 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 		super.setProcessed (processed);
 		if (get_ID() == 0)
 			return;
-		String set = "SET Processed='"
-			+ (processed ? "Y" : "N")
-			+ "' WHERE JP_PP_Fact_ID=" + getJP_PP_Fact_ID();
-		DB.executeUpdateEx("UPDATE JP_PP_FactLine " + set, get_TrxName());
-		m_PPFactLines = null;
+		
+		/** Work Process Type individual process */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			String set = "SET Processed='"
+				+ (processed ? "Y" : "N")
+				+ "' WHERE JP_PP_Fact_ID=" + getJP_PP_Fact_ID();
+			DB.executeUpdateEx("UPDATE JP_PP_FactLine " + set, get_TrxName());
+			m_PPFactLines = null;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			String set = "SET Processed='"
+					+ (processed ? "Y" : "N")
+					+ "' WHERE JP_PP_Fact_ID=" + getJP_PP_Fact_ID();
+				DB.executeUpdateEx("UPDATE JP_PP_MM_FactLine " + set, get_TrxName());
+				m_PPMMFactLines = null;
+		}
 	}
 
 	@Override
@@ -1295,72 +1755,185 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 	}
 
+	
+	private MPPMMFactLine[] m_PPMMFactLines = null;
+
+	/**
+	 * Get PP MM Fact Lines
+	 *
+	 * @param whereClause
+	 * @param orderClause
+	 * @return
+	 */
+	public MPPMMFactLine[] getPPMMFactLines (String whereClause, String orderClause)
+	{
+		StringBuilder whereClauseFinal = new StringBuilder(MPPMMFactLine.COLUMNNAME_JP_PP_Fact_ID+"=? ");
+		if (!Util.isEmpty(whereClause, true))
+			whereClauseFinal.append(whereClause);
+		if (orderClause.length() == 0)
+			orderClause = MPPMMFactLine.COLUMNNAME_Line;
+		//
+		List<MPPMMFactLine> list = new Query(getCtx(), MPPMMFactLine.Table_Name, whereClauseFinal.toString(), get_TrxName())
+										.setParameters(get_ID())
+										.setOrderBy(orderClause)
+										.list();
+
+		return list.toArray(new MPPMMFactLine[list.size()]);
+
+	}
+
+	/**
+	 * Get PP MM Fact Lines
+	 *
+	 *
+	 * @param requery
+	 * @param orderBy
+	 * @return
+	 */
+	public MPPMMFactLine[] getPPMMFactLines(boolean requery, String orderBy)
+	{
+		if (m_PPMMFactLines != null && !requery) {
+			set_TrxName(m_PPMMFactLines, get_TrxName());
+			return m_PPMMFactLines;
+		}
+		//
+		String orderClause = "";
+		if (orderBy != null && orderBy.length() > 0)
+			orderClause += orderBy;
+		else
+			orderClause += MPPMMFactLine.COLUMNNAME_Line;
+
+		m_PPMMFactLines = getPPMMFactLines(null, orderClause);
+		return m_PPMMFactLines;
+	}
+
+	/**
+	 * Get PP MM Fact Lines
+	 *
+	 *
+	 * @return
+	 */
+	public MPPMMFactLine[] getPPMMFactLines()
+	{
+		return getPPMMFactLines(false, null);
+
+	}
 
 	public String createFactLineFromPlanLine(String trxName)
 	{
 		MPPPlan ppPlan = new MPPPlan(getCtx(), getJP_PP_Plan_ID(), trxName);
-		MPPPlanLine[] ppPLines = ppPlan.getPPPlanLines();
-		MPPFactLine ppFLine = null;
-
-		BigDecimal plannedQty = Env.ZERO;
-		BigDecimal qtyUsed = Env.ZERO;
-		BigDecimal movementQty = Env.ZERO;
-		for(MPPPlanLine ppPLine : ppPLines)
+		
+		String JP_PP_WorkProcessType = getParent().getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType))
 		{
-			ppFLine = new MPPFactLine(getCtx(), 0 , get_TrxName());
-			PO.copyValues(ppPLine, ppFLine);
+			MPPPlanLine[] ppPLines = ppPlan.getPPPlanLines();
+			MPPFactLine ppFLine = null;
 
-			//Copy mandatory column to make sure
-			ppFLine.setJP_PP_Fact_ID(getJP_PP_Fact_ID());
-			ppFLine.setJP_PP_PlanLine_ID(ppPLine.getJP_PP_PlanLine_ID());
-			ppFLine.setLine(ppPLine.getLine());
-			ppFLine.setAD_Org_ID(getAD_Org_ID());
-			ppFLine.setM_Product_ID(ppPLine.getM_Product_ID());
-			ppFLine.setM_AttributeSetInstance_ID(ppPLine.getM_AttributeSetInstance_ID());
-			ppFLine.setIsEndProduct(ppPLine.isEndProduct());
-			ppFLine.setC_UOM_ID(ppPLine.getC_UOM_ID());
-			if(ppPLine.isEndProduct())
+			BigDecimal plannedQty = Env.ZERO;
+			BigDecimal qtyUsed = Env.ZERO;
+			BigDecimal movementQty = Env.ZERO;
+			for(MPPPlanLine ppPLine : ppPLines)
 			{
-				plannedQty = ppPLine.getPlannedQty().subtract(ppPLine.getJP_MovementQtyFact());
-				if(plannedQty.signum() == 0)
-					plannedQty = Env.ZERO;
-				qtyUsed = null;
-				movementQty = plannedQty;
-			}else {
-				plannedQty = ppPLine.getPlannedQty().add(ppPLine.getJP_MovementQtyFact());
-				if(plannedQty.signum() == 0)
+				ppFLine = new MPPFactLine(getCtx(), 0 , get_TrxName());
+				PO.copyValues(ppPLine, ppFLine);
+
+				//Copy mandatory column to make sure
+				ppFLine.setJP_PP_Fact_ID(getJP_PP_Fact_ID());
+				ppFLine.setJP_PP_PlanLine_ID(ppPLine.getJP_PP_PlanLine_ID());
+				ppFLine.setLine(ppPLine.getLine());
+				ppFLine.setAD_Org_ID(getAD_Org_ID());
+				ppFLine.setM_Product_ID(ppPLine.getM_Product_ID());
+				ppFLine.setM_AttributeSetInstance_ID(ppPLine.getM_AttributeSetInstance_ID());
+				ppFLine.setIsEndProduct(ppPLine.isEndProduct());
+				ppFLine.setC_UOM_ID(ppPLine.getC_UOM_ID());
+				if(ppPLine.isEndProduct())
 				{
-					plannedQty = Env.ZERO;
-					qtyUsed = Env.ZERO;
-					movementQty = Env.ZERO;
+					plannedQty = ppPLine.getPlannedQty().subtract(ppPLine.getJP_MovementQtyFact());
+					if(plannedQty.signum() == 0)
+						plannedQty = Env.ZERO;
+					qtyUsed = null;
+					movementQty = plannedQty;
 				}else {
-					qtyUsed = plannedQty;
-					movementQty = plannedQty.negate();
+					plannedQty = ppPLine.getPlannedQty().add(ppPLine.getJP_MovementQtyFact());
+					if(plannedQty.signum() == 0)
+					{
+						plannedQty = Env.ZERO;
+						qtyUsed = Env.ZERO;
+						movementQty = Env.ZERO;
+					}else {
+						qtyUsed = plannedQty;
+						movementQty = plannedQty.negate();
+					}
 				}
+
+				ppFLine.setPlannedQty(plannedQty);
+				ppFLine.setQtyUsed(qtyUsed);
+				ppFLine.setMovementQty(movementQty);
+				ppFLine.setJP_Processing1("N");
+				ppFLine.setJP_Processing2("N");
+				ppFLine.setJP_Processing3("N");
+				ppFLine.setIsCreated("N");
+				if(!ppFLine.save(get_TrxName()))
+				{
+					String msg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")
+									+ " " + Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID)
+									+ " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_Line)
+									+ " : "  + ppPLine.getLine()
+									;
+
+					m_processMsg = msg;
+					log.saveError("SaveError", msg);
+
+					return msg;
+				}
+
 			}
-
-			ppFLine.setPlannedQty(plannedQty);
-			ppFLine.setQtyUsed(qtyUsed);
-			ppFLine.setMovementQty(movementQty);
-			ppFLine.setJP_Processing1("N");
-			ppFLine.setJP_Processing2("N");
-			ppFLine.setJP_Processing3("N");
-			ppFLine.setIsCreated("N");
-			if(!ppFLine.save(get_TrxName()))
-			{
-				String msg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")
-								+ " " + Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_JP_PP_FactLine_ID)
-								+ " - "+ Msg.getElement(getCtx(), MPPFactLine.COLUMNNAME_Line)
-								+ " : "  + ppPLine.getLine()
-								;
-
-				m_processMsg = msg;
-				log.saveError("SaveError", msg);
-
-				return msg;
-			}
-
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+		
+			MPPMMPlanLine[] ppMMPLines = ppPlan.getPPMMPlanLines();
+			MPPMMFactLine ppMMFLine = null;
+			BigDecimal movementQty = Env.ZERO;
+			for(MPPMMPlanLine ppMMPLine : ppMMPLines)
+			{				
+				movementQty = ppMMPLine.getMovementQty().subtract(ppMMPLine.getJP_MovementQtyFact());
+				
+				if(movementQty.compareTo(Env.ZERO) > 0)
+				{
+					ppMMFLine = new MPPMMFactLine(getCtx(), 0 , get_TrxName());
+					PO.copyValues(ppMMPLine, ppMMFLine);
+					
+					//Copy mandatory column to make sure
+					ppMMFLine.setJP_PP_Fact_ID(getJP_PP_Fact_ID());
+					ppMMFLine.setJP_PP_MM_PlanLine_ID(ppMMPLine.getJP_PP_MM_PlanLine_ID());
+					ppMMFLine.setAD_Org_ID(getAD_Org_ID());
+					ppMMFLine.setLine(ppMMPLine.getLine());
+					ppMMFLine.setJP_PP_MM_PlanLine_ID(ppMMPLine.getJP_PP_MM_PlanLine_ID());
+					ppMMFLine.setM_Product_ID(ppMMPLine.getM_Product_ID());
+					ppMMFLine.setM_Locator_ID(ppMMPLine.getM_Locator_ID());
+					ppMMFLine.setM_LocatorTo_ID(ppMMPLine.getM_LocatorTo_ID());
+					ppMMFLine.setM_AttributeSetInstance_ID(ppMMPLine.getM_AttributeSetInstance_ID());
+					ppMMFLine.setM_AttributeSetInstanceTo_ID(ppMMPLine.getM_AttributeSetInstanceTo_ID());
+					ppMMFLine.setMovementQty(movementQty);
+					if(!ppMMFLine.save(get_TrxName()))
+					{
+						String msg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")
+										+ " " + Msg.getMsg(getCtx(), "SaveError") + " - "+ Msg.getElement(getCtx(), MPPMMFactLine.COLUMNNAME_JP_PP_MM_FactLine_ID)
+										+ " - "+ Msg.getElement(getCtx(), MPPMMFactLine.COLUMNNAME_Line)
+										+ " : "  + ppMMFLine.getLine()
+										;
+	
+						m_processMsg = msg;
+						log.saveError("SaveError", msg);
+	
+						return msg;
+					}
+					
+				}//if
+				
+			}//for
 		}
+
 
 		return null;
 	}
@@ -1412,3 +1985,4 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 
 }	//	MPPFact
+

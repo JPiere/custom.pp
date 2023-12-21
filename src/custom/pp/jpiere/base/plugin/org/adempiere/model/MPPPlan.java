@@ -16,6 +16,7 @@ package custom.pp.jpiere.base.plugin.org.adempiere.model;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import java.util.logging.Level;
 
 import org.compiere.model.MDocType;
 import org.compiere.model.MFactAcct;
+import org.compiere.model.MMovementLine;
 import org.compiere.model.MPeriod;
 import org.compiere.model.MProduct;
 import org.compiere.model.MSysConfig;
@@ -36,15 +38,18 @@ import org.compiere.model.Query;
 import org.compiere.process.DocAction;
 import org.compiere.process.DocOptions;
 import org.compiere.process.DocumentEngine;
+import org.compiere.util.CCache;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
 
 /**
- * JPIERE-0501:JPiere PP Plan
+ * JPIERE-0501: JPiere PP Doc
+ * JPIERE-0502: JPiere PP Doc Template
+ * JPIERE-0609: Workprocess & Create Material Movement From PP Fact Doc.
  *
- * @author Hideaki Hagiwara(h.hagiwara@oss-erp.co.jp)
+ * @author Hideaki Hagiwara
  *
  */
 public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
@@ -72,9 +77,31 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		return m_PPDoc;
 	}
 
+	/**	Cache				*/
+	private static CCache<Integer,MPPPlan>	s_cache = new CCache<Integer,MPPPlan>(Table_Name, 20);
+
+	/**
+	 * 	Get from Cache
+	 *	@param ctx context
+	 *	@param JP_PP_Plan_ID id
+	 *	@return MPPPlan PP Plan
+	 */
+	public static MPPPlan get (Properties ctx, int JP_PP_Plan_ID)
+	{
+		Integer ii = Integer.valueOf(JP_PP_Plan_ID);
+		MPPPlan retValue = (MPPPlan)s_cache.get(ii);
+		if (retValue != null)
+			return retValue;
+		retValue = new MPPPlan (ctx, JP_PP_Plan_ID, null);
+		if (retValue.get_ID () != 0)
+			s_cache.put (JP_PP_Plan_ID, retValue);
+		return retValue;
+	}	//	get
+
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
+		/** Common check */ 
 		//SetAD_Org_ID
 		if(newRecord)
 		{
@@ -92,6 +119,139 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			}
 		}
 
+		//Check Doc Type
+		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
+		{
+			if(!getC_DocType().getDocBaseType().equals("JDP"))
+			{
+				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType")) ;
+				return false;
+			}
+		}
+		
+		//JPIERE-0582
+		if(!isRecordRouteJP())
+		{
+			setJP_WarehouseDst_ID(0);
+			setJP_PhysicalWarehouseDst_ID(0);
+			setJP_MovementDateDst(null);
+		}
+
+		//Check Work Process Type
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();		
+		if(!newRecord)
+		{
+			Object obj_Old_JP_PP_WorkProcessType = get_ValueOld(MPPWorkProcess.COLUMNNAME_JP_PP_WorkProcessType);
+			String old_JP_PP_WorkProcessType = null;
+					
+			if(obj_Old_JP_PP_WorkProcessType == null)
+				old_JP_PP_WorkProcessType = MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction;
+			else	
+				old_JP_PP_WorkProcessType = (String)obj_Old_JP_PP_WorkProcessType;
+			
+			if(JP_PP_WorkProcessType.equals(old_JP_PP_WorkProcessType))
+			{
+				;//Nothing to do
+				
+			}else{
+				
+				if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(old_JP_PP_WorkProcessType))
+				{
+					MPPPlanLine[] m_PPPlanLines = getPPPlanLines();
+					if(m_PPPlanLines.length > 0)
+					{
+						//This PP Plan have some PP Plan lines, you can not change to different Work process type.
+						String msg = Msg.getMsg(getCtx(), "JP_PP_DiffWorkProcessType");
+						log.saveError("Error", msg);
+						return false;
+					}
+					
+					MPPMMPlanLine[] m_PPMMPlanLines = getPPMMPlanLines();
+					if(m_PPMMPlanLines.length > 0)
+					{
+						String msg = Msg.getMsg(getCtx(), "JP_PP_DiffWorkProcessType");
+						log.saveError("Error", msg);
+						return false;
+					}
+					
+				}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(old_JP_PP_WorkProcessType)) {
+					
+					MPPPlanLine[] m_PPPlanLines = getPPPlanLines();
+					if(m_PPPlanLines.length > 0)
+					{
+						String msg = Msg.getMsg(getCtx(), "JP_PP_DiffWorkProcessType");
+						log.saveError("Error", msg);
+						return false;
+					}
+					
+				}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(old_JP_PP_WorkProcessType)) {
+					
+					MPPMMPlanLine[] m_PPMMPlanLines = getPPMMPlanLines();
+					if(m_PPMMPlanLines.length > 0)
+					{
+						String msg = Msg.getMsg(getCtx(), "JP_PP_DiffWorkProcessType");
+						log.saveError("Error", msg);
+						return false;
+					}
+				}
+			}
+		}
+		
+		/** Work Process Type individual Check */
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			//Initialize
+			setJP_WarehouseFrom_ID(0);
+			setJP_WarehouseTo_ID(0);
+			setJP_PhysicalWarehouseFrom_ID(0);
+			setJP_PhysicalWarehouseTo_ID(0);
+			setIsRecordRouteJP(false);
+			setJP_WarehouseNext_ID(0);
+			setJP_WarehouseDst_ID(0);
+			setJP_PhysicalWarehouseNext_ID(0);
+			setJP_PhysicalWarehouseDst_ID(0);
+			setJP_MovementDateNext(null);
+			setJP_MovementDateDst(null);
+			
+			setM_Product_ID(0);
+			setM_Locator_ID(0);
+			setUPC(null);
+			setProductionQty(Env.ZERO);
+			setC_UOM_ID(0);
+			
+			setIsSplitWhenDifferenceJP(false);
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			//Initialize
+			setJP_WarehouseFrom_ID(0);
+			setJP_WarehouseTo_ID(0);
+			setJP_PhysicalWarehouseFrom_ID(0);
+			setJP_PhysicalWarehouseTo_ID(0);
+			setIsRecordRouteJP(false);
+			setJP_WarehouseNext_ID(0);
+			setJP_WarehouseDst_ID(0);
+			setJP_PhysicalWarehouseNext_ID(0);
+			setJP_PhysicalWarehouseDst_ID(0);
+			setJP_MovementDateNext(null);
+			setJP_MovementDateDst(null);
+			
+			
+			//Mandatory check
+			if(getM_Product_ID() == 0)
+			{
+				String msg = Msg.getMsg(getCtx(), "FillMandatory") + Msg.getElement(getCtx(), "M_Product_ID");
+				log.saveError("Error", msg);
+				return false;
+			}
+			
+			if(getM_Locator_ID() == 0)
+			{
+				String msg = Msg.getMsg(getCtx(), "FillMandatory") + Msg.getElement(getCtx(), "M_Locator_ID");
+				log.saveError("Error", msg);
+				return false;
+			}
+			
 		//Set C_UOM_ID
 		if(newRecord || is_ValueChanged(MPPPlan.COLUMNNAME_C_UOM_ID) || getC_UOM_ID() == 0)
 		{
@@ -134,14 +294,16 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			setJP_ProductionQtyFact(getJP_ProductionQtyFact().setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP));
 		}
 
-		//Check Doc Type
-		if(newRecord || is_ValueChanged(MPPDoc.COLUMNNAME_C_DocType_ID))
-		{
-			if(!getC_DocType().getDocBaseType().equals("JDP"))
-			{
-				log.saveError("Error", Msg.getMsg(getCtx(), "JP_DifferentDocType")) ;
-				return false;
-			}
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			//Initialize
+			setM_Product_ID(0);
+			setM_Locator_ID(0);
+			setUPC(null);
+			setProductionQty(Env.ZERO);
+			setC_UOM_ID(0);
+			
 		}
 
 		//For Tree
@@ -156,44 +318,58 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		if(!success)
 			return false;
 
-		//Update Line Qty
-		if(!newRecord && is_ValueChanged(MPPPlan.COLUMNNAME_ProductionQty))
+
+		/** Work Process Type individual Check */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
 		{
-			boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
-			MUOM uom = null;
-
-			BigDecimal newQty = getProductionQty();
-			BigDecimal oldQty = (BigDecimal)get_ValueOld(MPPPlan.COLUMNNAME_ProductionQty) ;
-			BigDecimal rate = Env.ONE;
-			if(oldQty != null && oldQty.compareTo(Env.ZERO) != 0)
-				rate = newQty.divide(oldQty, 4, RoundingMode.HALF_UP);
-
-			MPPPlanLine[] lines = getPPPlanLines(true, null);
-			for(MPPPlanLine line : lines)
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			//Update Line Qty
+			if(!newRecord && is_ValueChanged(MPPPlan.COLUMNNAME_ProductionQty))
 			{
-				if(line.isEndProduct())
+				boolean isStdPrecision = MSysConfig.getBooleanValue(MPPDoc.JP_PP_UOM_STDPRECISION, true, getAD_Client_ID(), getAD_Org_ID());
+				MUOM uom = null;
+	
+				BigDecimal newQty = getProductionQty();
+				BigDecimal oldQty = (BigDecimal)get_ValueOld(MPPPlan.COLUMNNAME_ProductionQty) ;
+				BigDecimal rate = Env.ONE;
+				if(oldQty != null && oldQty.compareTo(Env.ZERO) != 0)
+					rate = newQty.divide(oldQty, 4, RoundingMode.HALF_UP);
+	
+				MPPPlanLine[] lines = getPPPlanLines(true, null);
+				for(MPPPlanLine line : lines)
 				{
-					line.setPlannedQty(getProductionQty());
-					line.setQtyUsed(null);
-					line.setMovementQty(getProductionQty());
-
-				}else {
-					uom = MUOM.get(line.getC_UOM_ID());
-					oldQty = line.getPlannedQty();
-					newQty = oldQty.multiply(rate).setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP);
-					line.setPlannedQty(newQty);
-					line.setQtyUsed(newQty);
-					line.setMovementQty(newQty.negate());
-				}
-				if(!line.save(get_TrxName()))
-				{
-					String msg =  Msg.getElement(getCtx(), MPPPlanLine.COLUMNNAME_JP_PP_PlanLine_ID)
-				 			+ " - " + Msg.getElement(getCtx(), MPPPlanLine.COLUMNNAME_Line) + " : " + line.getLine();
-					log.saveError("SaveError", msg);
-					m_processMsg = msg;
-					return false;
+					if(line.isEndProduct())
+					{
+						line.setPlannedQty(getProductionQty());
+						line.setQtyUsed(null);
+						line.setMovementQty(getProductionQty());
+	
+					}else {
+						uom = MUOM.get(line.getC_UOM_ID());
+						oldQty = line.getPlannedQty();
+						newQty = oldQty.multiply(rate).setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP);
+						line.setPlannedQty(newQty);
+						line.setQtyUsed(newQty);
+						line.setMovementQty(newQty.negate());
+					}
+					if(!line.save(get_TrxName()))
+					{
+						String msg =  Msg.getElement(getCtx(), MPPPlanLine.COLUMNNAME_JP_PP_PlanLine_ID)
+					 			+ " - " + Msg.getElement(getCtx(), MPPPlanLine.COLUMNNAME_Line) + " : " + line.getLine();
+						log.saveError("SaveError", msg);
+						m_processMsg = msg;
+						return false;
+					}
 				}
 			}
+
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			;
 		}
 
 		return true;
@@ -213,6 +389,17 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		}
 
 		return true;
+	}
+
+	
+	@Override
+	public String getJP_PP_WorkProcessType() 
+	{
+		String JP_PP_WorkProcessType = super.getJP_PP_WorkProcessType();
+		if(Util.isEmpty(JP_PP_WorkProcessType))
+			return MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction;
+		else
+			return JP_PP_WorkProcessType;
 	}
 
 	/**
@@ -301,7 +488,198 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			return DocAction.STATUS_Invalid;
 		}
 
+		/** Work Process Type individual Check */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			if(isRecordRouteJP())
+			{				
+				int int_WarehouseFrom_ID = getJP_WarehouseFrom_ID();
+				int int_PhysicalWarehouseFrom_ID = getJP_PhysicalWarehouseFrom_ID();
+				int int_WarehouseTo_ID = getJP_WarehouseTo_ID();
+				int int_PhysicalWarehouseTo_ID = getJP_PhysicalWarehouseTo_ID();
+				StringBuffer sb = new StringBuffer();
+				
+				if(int_WarehouseFrom_ID != 0)
+				{
+					String sql = "SELECT * FROM JP_PP_MM_PlanLine ml INNER JOIN M_Locator loc ON (ml.M_Locator_ID = loc.M_Locator_ID) "
+									+ " WHERE JP_PP_Plan_ID = ? AND loc.M_Warehouse_ID <> ? ORDER BY ml.line";
+					
+					PreparedStatement pstmt = null;
+					ResultSet rs = null;
+					try
+					{
+						pstmt = DB.prepareStatement(sql, get_TrxName());
+						pstmt.setInt(1, getJP_PP_Plan_ID());
+						pstmt.setInt(2, int_WarehouseFrom_ID);
+						rs = pstmt.executeQuery();
+						
+						while (rs.next())
+						{
+							MPPMMPlanLine line = new MPPMMPlanLine(getCtx(), rs, get_TrxName());
+							sb.append(line.getLine()).append(" / ");
+						}
+						
+						if(!Util.isEmpty(sb.toString()))
+						{
+							String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_WarehouseFrom_ID);
+							String msg1 = Msg.getElement(Env.getCtx(),  MPPMMPlanLine.COLUMNNAME_M_Locator_ID);
+							String msg = Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1});//Different between {0} and {1}
+							m_processMsg = msg + Msg.getElement(getCtx(), MPPMMPlanLine.COLUMNNAME_Line) + " : " + sb.toString();
+							return DocAction.STATUS_Invalid;
+						}
+					}
+					catch (Exception e)
+					{
+						log.log(Level.SEVERE, sql, e);
+						m_processMsg = e.toString();
+						return DocAction.STATUS_Invalid;
+					}
+					finally
+					{
+						DB.close(rs, pstmt);
+						rs = null;
+						pstmt = null;
+					}
+				}
+				
+				if(int_PhysicalWarehouseFrom_ID != 0)
+				{
+					String sql = "SELECT * FROM JP_PP_MM_PlanLine ml INNER JOIN M_Locator loc ON (ml.M_Locator_ID = loc.M_Locator_ID) "
+							+ " WHERE JP_PP_Plan_ID = ? AND loc.JP_PhysicalWarehouse_ID <> ? ORDER BY ml.line";
+					
+					PreparedStatement pstmt = null;
+					ResultSet rs = null;
+					try
+					{
+						pstmt = DB.prepareStatement(sql, get_TrxName());
+						pstmt.setInt(1, getJP_PP_Plan_ID());
+						pstmt.setInt(2, int_PhysicalWarehouseFrom_ID);
+						rs = pstmt.executeQuery();
+						while (rs.next())
+						{
+							MPPMMPlanLine line = new MPPMMPlanLine(getCtx(), rs, get_TrxName());
+							sb.append(line.getLine()).append(" / ");
+						}
+						
+						if(!Util.isEmpty(sb.toString()))
+						{
+							String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_PhysicalWarehouseFrom_ID);
+							String msg1 = Msg.getElement(Env.getCtx(),  MPPMMPlanLine.COLUMNNAME_M_Locator_ID);
+							String msg = Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1});//Different between {0} and {1}
+							m_processMsg =  msg + Msg.getElement(getCtx(), MPPMMPlanLine.COLUMNNAME_Line) + " : " + sb.toString();
+							return DocAction.STATUS_Invalid;
+						}
+					}
+					catch (Exception e)
+					{
+						log.log(Level.SEVERE, sql, e);
+						m_processMsg = e.toString();
+						return DocAction.STATUS_Invalid;
+					}
+					finally
+					{
+						DB.close(rs, pstmt);
+						rs = null;
+						pstmt = null;
+					}
+				}
+				
+				if(int_WarehouseTo_ID != 0)
+				{
+					String sql = "SELECT * FROM JP_PP_MM_PlanLine ml INNER JOIN M_Locator loc ON (ml.M_LocatorTo_ID = loc.M_Locator_ID) "
+							+ " WHERE JP_PP_Plan_ID = ? AND loc.M_Warehouse_ID <> ? ORDER BY ml.line";		
 
+					PreparedStatement pstmt = null;
+					ResultSet rs = null;
+					try
+					{
+						pstmt = DB.prepareStatement(sql, get_TrxName());
+						pstmt.setInt(1, getJP_PP_Plan_ID());
+						pstmt.setInt(2, int_WarehouseTo_ID);
+						rs = pstmt.executeQuery();
+						while (rs.next())
+						{
+							MPPMMPlanLine line = new MPPMMPlanLine(getCtx(), rs, get_TrxName());
+							sb.append(line.getLine()).append(" / ");
+						}
+						
+						if(!Util.isEmpty(sb.toString()))
+						{
+							String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_WarehouseTo_ID);
+							String msg1 = Msg.getElement(Env.getCtx(), MPPMMPlanLine.COLUMNNAME_M_LocatorTo_ID);
+							String msg = Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1});//Different between {0} and {1}
+							m_processMsg =  msg + Msg.getElement(getCtx(), MPPMMPlanLine.COLUMNNAME_Line) + " : " + sb.toString();
+							return DocAction.STATUS_Invalid;
+						}
+					}
+					catch (Exception e)
+					{
+						log.log(Level.SEVERE, sql, e);
+						m_processMsg = e.toString();
+						return DocAction.STATUS_Invalid;
+					}
+					finally
+					{
+						DB.close(rs, pstmt);
+						rs = null;
+						pstmt = null;
+					}
+				}
+				
+				
+				if(int_PhysicalWarehouseTo_ID != 0)
+				{
+					String sql = "SELECT * FROM JP_PP_MM_PlanLine ml INNER JOIN M_Locator loc ON (ml.M_LocatorTo_ID = loc.M_Locator_ID) "
+							+ " WHERE JP_PP_Plan_ID = ? AND loc.JP_PhysicalWarehouse_ID <> ? ORDER BY ml.line";	
+					
+					PreparedStatement pstmt = null;
+					ResultSet rs = null;
+					try
+					{
+						pstmt = DB.prepareStatement(sql, get_TrxName());
+						pstmt.setInt(1, getJP_PP_Plan_ID());
+						pstmt.setInt(2, int_PhysicalWarehouseTo_ID);
+						rs = pstmt.executeQuery();
+						while (rs.next())
+						{
+							MMovementLine line = new MMovementLine(getCtx(), rs, get_TrxName());
+							sb.append(line.getLine()).append(" / ");
+						}
+						
+						if(!Util.isEmpty(sb.toString()))
+						{
+							String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_PhysicalWarehouseTo_ID);
+							String msg1 = Msg.getElement(Env.getCtx(),  MPPMMPlanLine.COLUMNNAME_M_LocatorTo_ID);
+							String msg = Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1});//Different between {0} and {1}
+							m_processMsg =  msg + Msg.getElement(getCtx(), MPPMMPlanLine.COLUMNNAME_Line) + " : " + sb.toString();
+							return DocAction.STATUS_Invalid;
+						}
+					}
+					catch (Exception e)
+					{
+						log.log(Level.SEVERE, sql, e);
+						m_processMsg = e.toString();
+						return DocAction.STATUS_Invalid;
+					}
+					finally
+					{
+						DB.close(rs, pstmt);
+						rs = null;
+						pstmt = null;
+					}
+				}
+				
+			}//if(!newRecord && get_ValueAsBoolean(MPPPlanT.COLUMNNAME_IsRecordRouteJP))
+		}
+		
+		
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_PREPARE);
 		if (m_processMsg != null)
 			return DocAction.STATUS_Invalid;
@@ -674,11 +1052,31 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		super.setProcessed (processed);
 		if (get_ID() == 0)
 			return;
-		String set = "SET Processed='"
-			+ (processed ? "Y" : "N")
-			+ "' WHERE JP_PP_Plan_ID=" + getJP_PP_Plan_ID();
-		DB.executeUpdateEx("UPDATE JP_PP_PlanLine " + set, get_TrxName());
-		m_PPPlanLines = null;
+		
+		
+		/** Work Process Type individual process */
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
+		{
+			;
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
+			
+			String set = "SET Processed='"
+				+ (processed ? "Y" : "N")
+				+ "' WHERE JP_PP_Plan_ID=" + getJP_PP_Plan_ID();
+			DB.executeUpdateEx("UPDATE JP_PP_PlanLine " + set, get_TrxName());
+			m_PPPlanLines = null;
+
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			String set = "SET Processed='"
+					+ (processed ? "Y" : "N")
+					+ "' WHERE JP_PP_Plan_ID=" + getJP_PP_Plan_ID();
+				DB.executeUpdateEx("UPDATE JP_PP_MM_PlanLine " + set, get_TrxName());
+				m_PPMMPlanLines = null;
+		}
+
 	}
 
 	@Override
@@ -776,6 +1174,68 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 
 	}
 
+	private MPPMMPlanLine[] m_PPMMPlanLines = null;
+
+	/**
+	 * Get PP MM Plan Lines
+	 *
+	 * @param whereClause
+	 * @param orderClause
+	 * @return
+	 */
+	public MPPMMPlanLine[] getPPMMPlanLines (String whereClause, String orderClause)
+	{
+		StringBuilder whereClauseFinal = new StringBuilder(MPPMMPlanLine.COLUMNNAME_JP_PP_Plan_ID+"=? ");
+		if (!Util.isEmpty(whereClause, true))
+			whereClauseFinal.append(whereClause);
+		if (orderClause.length() == 0)
+			orderClause = MPPMMPlanLine.COLUMNNAME_Line;
+		//
+		List<MPPMMPlanLine> list = new Query(getCtx(), MPPMMPlanLine.Table_Name, whereClauseFinal.toString(), get_TrxName())
+										.setParameters(get_ID())
+										.setOrderBy(orderClause)
+										.list();
+
+		return list.toArray(new MPPMMPlanLine[list.size()]);
+
+	}
+
+	/**
+	 * Get PP MM Plan Lines
+	 *
+	 *
+	 * @param requery
+	 * @param orderBy
+	 * @return
+	 */
+	public MPPMMPlanLine[] getPPMMPlanLines(boolean requery, String orderBy)
+	{
+		if (m_PPMMPlanLines != null && !requery) {
+			set_TrxName(m_PPMMPlanLines, get_TrxName());
+			return m_PPMMPlanLines;
+		}
+		//
+		String orderClause = "";
+		if (orderBy != null && orderBy.length() > 0)
+			orderClause += orderBy;
+		else
+			orderClause += MPPMMPlanLine.COLUMNNAME_Line;
+
+		m_PPMMPlanLines = getPPMMPlanLines(" AND IsActive='Y' ", orderClause);
+		return m_PPMMPlanLines;
+	}
+
+	/**
+	 * Get PP MM Plan Lines
+	 *
+	 *
+	 * @return
+	 */
+	public MPPMMPlanLine[] getPPMMPlanLines()
+	{
+		return getPPMMPlanLines(false, null);
+
+	}
 
 
 	private MPPFact[] m_PPFacts = null;
@@ -851,12 +1311,6 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 	{
 		String msg = null;
 
-		if(!isHaveEndProduct())
-		{
-			//PP Lines does not contain End Product
-			return Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
-		}
-
 		MPPFact[] ppFacts = getPPFacts(true, null);
 		for(MPPFact ppFact : ppFacts)
 		{
@@ -868,7 +1322,7 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 			}
 		}
 
-		MPPPlanLine[] ppPLines = getPPPlanLines(true, null);
+		
 		MPPFact ppFact = new MPPFact(getCtx(), 0, get_TrxName());
 		PO.copyValues(this, ppFact);
 
@@ -887,11 +1341,6 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		ppFact.setDocumentNo(null);
 		ppFact.setName(getJP_Name());
 		ppFact.setMovementDate(getDateAcct());
-		if(ppPLines.length > 0)
-			ppFact.setIsCreated("Y");
-		ppFact.setProductionQty(getProductionQty().subtract(getJP_ProductionQtyFact()));
-		ppFact.setM_Product_ID(getM_Product_ID());
-		ppFact.setC_UOM_ID(getC_UOM_ID());
 		ppFact.setJP_PP_Workload_UOM_ID(getJP_PP_Workload_UOM_ID());
 		ppFact.setJP_PP_Workload_Fact(Env.ZERO);
 		ppFact.setJP_PP_Start(null);
@@ -905,6 +1354,40 @@ public class MPPPlan extends X_JP_PP_Plan implements DocAction,DocOptions
 		ppFact.setJP_Processing4("N");
 		ppFact.setJP_Processing5("N");
 		ppFact.setJP_Processing6("N");
+		
+		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
+		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType))
+		{
+			if(!isHaveEndProduct())
+			{
+				//PP Lines does not contain End Product
+				return Msg.getMsg(getCtx(), "JP_PP_NotContainEndProduct");
+			}
+			
+			MPPPlanLine[] ppPLines = getPPPlanLines(true, null); 
+			if(ppPLines.length > 0)
+				ppFact.setIsCreated("Y");
+			ppFact.setProductionQty(getProductionQty().subtract(getJP_ProductionQtyFact()));
+			ppFact.setM_Product_ID(getM_Product_ID());
+			ppFact.setC_UOM_ID(getC_UOM_ID());
+
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+			
+			MPPMMPlanLine[] ppMMPLines = getPPMMPlanLines(true, null); 
+			if(ppMMPLines.length > 0)
+				ppFact.setIsCreated("Y");
+			ppFact.setProductionQty(Env.ZERO);
+			ppFact.setM_Product_ID(0);
+			ppFact.setC_UOM_ID(0);
+			
+		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType)) {
+			
+			ppFact.setProductionQty(Env.ZERO);
+			ppFact.setM_Product_ID(0);
+			ppFact.setC_UOM_ID(0);
+		}
+		
+		
 		if(!ppFact.save(get_TrxName()))
 		{
 			msg = Msg.getMsg(getCtx(), "JP_CouldNotCreate")

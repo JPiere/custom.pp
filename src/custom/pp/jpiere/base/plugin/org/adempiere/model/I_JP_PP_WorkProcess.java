@@ -21,25 +21,25 @@ import java.sql.Timestamp;
 import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for JP_PP_PlanLineTQT
+/** Generated Interface for JP_PP_WorkProcess
  *  @author iDempiere (generated) 
  *  @version Release 10
  */
 @SuppressWarnings("all")
-public interface I_JP_PP_PlanLineTQT 
+public interface I_JP_PP_WorkProcess 
 {
 
-    /** TableName=JP_PP_PlanLineTQT */
-    public static final String Table_Name = "JP_PP_PlanLineTQT";
+    /** TableName=JP_PP_WorkProcess */
+    public static final String Table_Name = "JP_PP_WorkProcess";
 
-    /** AD_Table_ID=1000277 */
+    /** AD_Table_ID=1000308 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
 
-    /** AccessLevel = 1 - Org 
+    /** AccessLevel = 3 - Client - Org 
      */
-    BigDecimal accessLevel = BigDecimal.valueOf(1);
+    BigDecimal accessLevel = BigDecimal.valueOf(3);
 
     /** Load Meta Data */
 
@@ -93,15 +93,6 @@ public interface I_JP_PP_PlanLineTQT
 	  */
 	public String getDescription();
 
-    /** Column name ExpectedResult */
-    public static final String COLUMNNAME_ExpectedResult = "ExpectedResult";
-
-	/** Set Expected Result	  */
-	public void setExpectedResult (String ExpectedResult);
-
-	/** Get Expected Result	  */
-	public String getExpectedResult();
-
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -115,64 +106,53 @@ public interface I_JP_PP_PlanLineTQT
 	  */
 	public boolean isActive();
 
-    /** Column name JP_PP_PlanLineTQT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineTQT_ID = "JP_PP_PlanLineTQT_ID";
+    /** Column name JP_PP_WorkProcessType */
+    public static final String COLUMNNAME_JP_PP_WorkProcessType = "JP_PP_WorkProcessType";
 
-	/** Set PP Quality Test Template	  */
-	public void setJP_PP_PlanLineTQT_ID (int JP_PP_PlanLineTQT_ID);
-
-	/** Get PP Quality Test Template	  */
-	public int getJP_PP_PlanLineTQT_ID();
-
-    /** Column name JP_PP_PlanLineTQT_UU */
-    public static final String COLUMNNAME_JP_PP_PlanLineTQT_UU = "JP_PP_PlanLineTQT_UU";
-
-	/** Set PP Quality Test Template (UU)	  */
-	public void setJP_PP_PlanLineTQT_UU (String JP_PP_PlanLineTQT_UU);
-
-	/** Get PP Quality Test Template (UU)	  */
-	public String getJP_PP_PlanLineTQT_UU();
-
-    /** Column name JP_PP_PlanLineT_ID */
-    public static final String COLUMNNAME_JP_PP_PlanLineT_ID = "JP_PP_PlanLineT_ID";
-
-	/** Set PP Plan Line Template.
-	  * JPIERE-0501:JPBP
+	/** Set Work Process Type.
+	  * JPIERE-0609:JPBP
 	  */
-	public void setJP_PP_PlanLineT_ID (int JP_PP_PlanLineT_ID);
+	public void setJP_PP_WorkProcessType (String JP_PP_WorkProcessType);
 
-	/** Get PP Plan Line Template.
-	  * JPIERE-0501:JPBP
+	/** Get Work Process Type.
+	  * JPIERE-0609:JPBP
 	  */
-	public int getJP_PP_PlanLineT_ID();
+	public String getJP_PP_WorkProcessType();
 
-	public I_JP_PP_PlanLineT getJP_PP_PlanLineT() throws RuntimeException;
+    /** Column name JP_PP_WorkProcess_ID */
+    public static final String COLUMNNAME_JP_PP_WorkProcess_ID = "JP_PP_WorkProcess_ID";
 
-    /** Column name M_QualityTest_ID */
-    public static final String COLUMNNAME_M_QualityTest_ID = "M_QualityTest_ID";
-
-	/** Set Quality Test	  */
-	public void setM_QualityTest_ID (int M_QualityTest_ID);
-
-	/** Get Quality Test	  */
-	public int getM_QualityTest_ID();
-
-	public org.compiere.model.I_M_QualityTest getM_QualityTest() throws RuntimeException;
-
-    /** Column name SeqNo */
-    public static final String COLUMNNAME_SeqNo = "SeqNo";
-
-	/** Set Sequence.
-	  * Method of ordering records;
- lowest number comes first
+	/** Set Work Process.
+	  * JPIERE-0609:JPBP
 	  */
-	public void setSeqNo (int SeqNo);
+	public void setJP_PP_WorkProcess_ID (int JP_PP_WorkProcess_ID);
 
-	/** Get Sequence.
-	  * Method of ordering records;
- lowest number comes first
+	/** Get Work Process.
+	  * JPIERE-0609:JPBP
 	  */
-	public int getSeqNo();
+	public int getJP_PP_WorkProcess_ID();
+
+    /** Column name JP_PP_WorkProcess_UU */
+    public static final String COLUMNNAME_JP_PP_WorkProcess_UU = "JP_PP_WorkProcess_UU";
+
+	/** Set JP_PP_WorkProcess_UU	  */
+	public void setJP_PP_WorkProcess_UU (String JP_PP_WorkProcess_UU);
+
+	/** Get JP_PP_WorkProcess_UU	  */
+	public String getJP_PP_WorkProcess_UU();
+
+    /** Column name Name */
+    public static final String COLUMNNAME_Name = "Name";
+
+	/** Set Name.
+	  * Alphanumeric identifier of the entity
+	  */
+	public void setName (String Name);
+
+	/** Get Name.
+	  * Alphanumeric identifier of the entity
+	  */
+	public String getName();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
@@ -189,4 +169,17 @@ public interface I_JP_PP_PlanLineTQT
 	  * User who updated this records
 	  */
 	public int getUpdatedBy();
+
+    /** Column name Value */
+    public static final String COLUMNNAME_Value = "Value";
+
+	/** Set Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public void setValue (String Value);
+
+	/** Get Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public String getValue();
 }
