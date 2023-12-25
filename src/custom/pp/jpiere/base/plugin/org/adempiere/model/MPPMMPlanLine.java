@@ -143,6 +143,30 @@ public class MPPMMPlanLine extends X_JP_PP_MM_PlanLine {
 			}
 		}
 		
+		if(newRecord || is_ValueChanged("MovementQty"))
+		{
+			if(getJP_MovementQtyFact().signum() > 0)
+			{
+				if(getMovementQty().compareTo(getJP_MovementQtyFact()) < 0)
+				{
+					String msg0 = Msg.getElement(Env.getCtx(), "MovementQty");
+					String msg1 = Msg.getElement(Env.getCtx(), "JP_MovementQtyFact");
+					log.saveError("Error", msg0 + " < "+msg1);
+					return false;
+				}
+				
+			}else if(getJP_MovementQtyFact().signum() < 0) {
+				
+				if(getMovementQty().compareTo(getJP_MovementQtyFact()) > 0)
+				{
+					String msg0 = Msg.getElement(Env.getCtx(), "MovementQty");
+					String msg1 = Msg.getElement(Env.getCtx(), "JP_MovementQtyFact");
+					log.saveError("Error", msg0 + " > "+msg1);
+					return false;
+				}
+			}
+		}
+		
 		return true;
 	}
 

@@ -19,6 +19,7 @@ import java.util.Properties;
 
 import org.compiere.model.MLocator;
 import org.compiere.model.MMovement;
+import org.compiere.model.MProduct;
 import org.compiere.model.Query;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -241,4 +242,14 @@ public class MPPMMFactLine extends X_JP_PP_MM_FactLine {
 
 	}
 
+	/**
+	 * 	Get Product
+	 *	@return product or null if not defined
+	 */
+	public MProduct getProduct()
+	{
+		if (getM_Product_ID() != 0)
+			return MProduct.getCopy(getCtx(), getM_Product_ID(), get_TrxName());
+		return null;
+	}	//	getProduct
 }
