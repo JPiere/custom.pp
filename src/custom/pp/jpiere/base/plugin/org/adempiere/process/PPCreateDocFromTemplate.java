@@ -212,41 +212,53 @@ public class PPCreateDocFromTemplate extends SvrProcess {
 				throw new Exception(Msg.getMsg(getCtx(), "NotFound")+ " " + Msg.getElement(getCtx(), MPPPlan.COLUMNNAME_JP_PP_PlanT_ID) );
 			}
 
-			if(ppPlan.getProductionQty().compareTo(Env.ZERO)==0)
+			String JP_PP_WorkProcessType = ppPlan.getJP_PP_WorkProcessType();
+			if(Util.isEmpty(JP_PP_WorkProcessType) 
+					|| MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType))
 			{
-				throw new Exception(Msg.getElement(getCtx(), MPPDoc.COLUMNNAME_ProductionQty) + " = 0" );
+			
+				if(ppPlan.getProductionQty().compareTo(Env.ZERO)==0)
+				{
+					throw new Exception(Msg.getElement(getCtx(), MPPDoc.COLUMNNAME_ProductionQty) + " = 0" );
+				}
+	
+				if(ppPlan.getPPPlanLines().length > 0 )
+				{
+					// There are PP Lines already.
+					throw new Exception(Msg.getMsg(getCtx(), "JP_PP_LinesThere"));
+				}
+	
+				MPPPlanT ppPlanT = new MPPPlanT(getCtx(), ppPlan.getJP_PP_PlanT_ID(), get_TrxName());
+	
+				if(ppPlan.getM_Product_ID() != ppPlanT.getM_Product_ID())
+				{
+					//Different between {0} and {1}
+					String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_PP_Plan_ID) + " - " + Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_M_Product_ID);
+					String msg1 = Msg.getElement(Env.getCtx(), MPPPlanT.COLUMNNAME_JP_PP_PlanT_ID) + " - " + Msg.getElement(Env.getCtx(),  MPPPlan.COLUMNNAME_M_Product_ID);
+					throw new Exception(Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1}));
+				}
+	
+				if(ppPlanT.getPPPlanLineTs().length == 0)
+				{
+					//There are not PP Plan Line Templates at PP Plan Template.
+					throw new Exception(Msg.getMsg(getCtx(), "JP_PP_LineT_NotThere"));
+				}
+	
+				BigDecimal planQty = ppPlan.getProductionQty();
+				BigDecimal templateQty = ppPlanT.getProductionQty();;
+				BigDecimal rate = Env.ONE;
+				if(templateQty != null && templateQty.compareTo(Env.ZERO) != 0)
+					rate = planQty.divide(templateQty, 4, RoundingMode.HALF_UP);
+	
+				p_CoefficientQty = rate;
+				createPlanLine(ppPlan, ppPlanT);
+				
+			}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
+				
+				MPPPlanT ppPlanT = new MPPPlanT(getCtx(), ppPlan.getJP_PP_PlanT_ID(), get_TrxName());
+				createPlanLine(ppPlan, ppPlanT);
 			}
 
-			if(ppPlan.getPPPlanLines().length > 0 )
-			{
-				// There are PP Lines already.
-				throw new Exception(Msg.getMsg(getCtx(), "JP_PP_LinesThere"));
-			}
-
-			MPPPlanT ppPlanT = new MPPPlanT(getCtx(), ppPlan.getJP_PP_PlanT_ID(), get_TrxName());
-
-			if(ppPlan.getM_Product_ID() != ppPlanT.getM_Product_ID())
-			{
-				//Different between {0} and {1}
-				String msg0 = Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_JP_PP_Plan_ID) + " - " + Msg.getElement(Env.getCtx(), MPPPlan.COLUMNNAME_M_Product_ID);
-				String msg1 = Msg.getElement(Env.getCtx(), MPPPlanT.COLUMNNAME_JP_PP_PlanT_ID) + " - " + Msg.getElement(Env.getCtx(),  MPPPlan.COLUMNNAME_M_Product_ID);
-				throw new Exception(Msg.getMsg(Env.getCtx(),"JP_Different",new Object[]{msg0,msg1}));
-			}
-
-			if(ppPlanT.getPPPlanLineTs().length == 0)
-			{
-				//There are not PP Plan Line Templates at PP Plan Template.
-				throw new Exception(Msg.getMsg(getCtx(), "JP_PP_LineT_NotThere"));
-			}
-
-			BigDecimal planQty = ppPlan.getProductionQty();
-			BigDecimal templateQty = ppPlanT.getProductionQty();;
-			BigDecimal rate = Env.ONE;
-			if(templateQty != null && templateQty.compareTo(Env.ZERO) != 0)
-				rate = planQty.divide(templateQty, 4, RoundingMode.HALF_UP);
-
-			p_CoefficientQty = rate;
-			createPlanLine(ppPlan, ppPlanT);
 
 			ppPlan.setIsCreated("Y");
 			ppPlan.saveEx(get_TrxName());
@@ -558,7 +570,13 @@ public class PPCreateDocFromTemplate extends SvrProcess {
 				ppMMPlanLine.setM_LocatorTo_ID(ppMMPlanLineT.getM_LocatorTo_ID());
 				ppMMPlanLine.setM_AttributeSetInstance_ID(ppMMPlanLineT.getM_AttributeSetInstance_ID());
 				ppMMPlanLine.setM_AttributeSetInstanceTo_ID(ppMMPlanLineT.getM_AttributeSetInstanceTo_ID());
-				ppMMPlanLine.setMovementQty(p_CoefficientQty.multiply(ppMMPlanLineT.getMovementQty()));
+				if(p_CoefficientQty.compareTo(Env.ZERO)==0)
+				{
+					ppMMPlanLine.setMovementQty(ppMMPlanLineT.getMovementQty());
+				}else {
+					ppMMPlanLine.setMovementQty(p_CoefficientQty.multiply(ppMMPlanLineT.getMovementQty()));
+				}
+				
 				ppMMPlanLine.saveEx(get_TrxName());
 				ppMMPlanLine.saveEx(get_TrxName());
 
