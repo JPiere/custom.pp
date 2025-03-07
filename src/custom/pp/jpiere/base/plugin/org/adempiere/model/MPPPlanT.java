@@ -42,6 +42,8 @@ import org.compiere.util.Util;
  */
 public class MPPPlanT extends X_JP_PP_PlanT {
 
+	private static final long serialVersionUID = 7491712486786419803L;
+
 	public MPPPlanT(Properties ctx, int JP_PP_PlanT_ID, String trxName)
 	{
 		super(ctx, JP_PP_PlanT_ID, trxName);

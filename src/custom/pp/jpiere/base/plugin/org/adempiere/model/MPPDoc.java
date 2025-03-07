@@ -46,7 +46,8 @@ import org.compiere.util.Util;
  */
 public class MPPDoc extends X_JP_PP_Doc implements DocAction,DocOptions
 {
-
+	private static final long serialVersionUID = 6288239655685825138L;
+	
 	public static final String JP_PP_UOM_STDPRECISION = "JP_PP_UOM_STDPRECISION";
 
 	public MPPDoc(Properties ctx, int JP_PP_Doc_ID, String trxName)

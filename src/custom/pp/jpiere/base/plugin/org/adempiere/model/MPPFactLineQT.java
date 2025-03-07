@@ -26,6 +26,8 @@ import java.util.Properties;
  */
 public class MPPFactLineQT extends X_JP_PP_FactLineQT {
 
+	private static final long serialVersionUID = 3204883437776804687L;
+
 	public MPPFactLineQT(Properties ctx, int JP_PP_FactLineQT_ID, String trxName)
 	{
 		super(ctx, JP_PP_FactLineQT_ID, trxName);

@@ -66,6 +66,7 @@ import org.compiere.util.Util;
  */
 public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 {
+	private static final long serialVersionUID = -5285143002075296884L;
 
 	public MPPFact(Properties ctx, int JP_PP_Fact_ID, String trxName)
 	{
@@ -293,7 +294,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 						oldQty = line.getQtyUsed();
 						if(oldQty.compareTo(Env.ZERO) == 0)
 						{
-							;//Noting to do because 0 * X = 0;
+							;//Nothing to do because 0 * X = 0;
 						}else {
 							newQty = oldQty.multiply(rate).setScale(isStdPrecision ? uom.getStdPrecision() : uom.getCostingPrecision(), RoundingMode.HALF_UP);
 							line.setQtyUsed(newQty);
@@ -533,7 +534,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				m_processMsg = "@NoLines@";
 				return DocAction.STATUS_Invalid;
 			}
-		
+
 			// Validate mandatory ASI on lines - IDEMPIERE-1770 - ASI validation must be moved to MMovement.prepareIt
 			for (MPPMMFactLine line : lines) {
 				//      Mandatory Instance
@@ -569,9 +570,8 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 					}
 				}       //      ASI
 			}
-		
+			
 		}
-
 
 
 		m_processMsg = ModelValidationEngine.get().fireDocValidate(this, ModelValidator.TIMING_AFTER_PREPARE);
@@ -653,7 +653,6 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 			{
 				return DocAction.STATUS_Invalid;
 			}
-
 			
 		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
 			
@@ -812,7 +811,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							movementQtyMA = movementQtyMA.negate();
 							if(qtyOnhand.compareTo(movementQtyMA) >=0 )
 							{
-								;//Noting to do;
+								;//Nothing to do;
 								
 							}else {
 								
@@ -839,7 +838,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 								if(storageOnHand.getQtyOnHand().compareTo(line.getQtyUsed()) >=0 )
 								{
-									;//Noting to do;
+									;//Nothing to do;
 								}else {
 									
 									MAttributeSetInstance asi =   new MAttributeSetInstance(getCtx(), line.getM_AttributeSetInstance_ID(), get_TrxName());
@@ -1317,7 +1316,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 		}else if(getDocStatus().equals(DocAction.STATUS_Closed)) {
 
-			;//Noting to do;
+			;//Nothing to do;
 
 		}else {
 
@@ -1356,7 +1355,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 		}else if(getDocStatus().equals(DocAction.STATUS_Closed)) {
 
-			;//Noting to do;
+			;//Nothing to do;
 
 		}else {
 
@@ -1382,7 +1381,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 		String JP_PP_WorkProcessType = getJP_PP_WorkProcessType();
 		if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_NotCreateDocument.equals(JP_PP_WorkProcessType))
 		{
-			return true; //Noting to do.
+			return true; //Nothing to do.
 			
 		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialProduction.equals(JP_PP_WorkProcessType)) {
 			
@@ -1545,7 +1544,7 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 							
 						}else if(m_confirm.getDocStatus().equals(STATUS_Voided) || m_confirm.getDocStatus().equals(STATUS_Reversed) ) {
 							
-							;//Noting to do.
+							;//Nothing to do.
 						
 						}else {
 							
@@ -1722,36 +1721,36 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 				options[index++] = DocumentEngine.ACTION_Void;
 				options[index++] = DocumentEngine.ACTION_Prepare;
 				options[index++] = DocumentEngine.ACTION_Complete;
-
+	
 				return index;
-
+	
 			}else if(docStatus.equals(DocumentEngine.STATUS_Invalid)) {
-
+	
 				index = 0;
 				options[index++] = DocumentEngine.ACTION_Void;
 				options[index++] = DocumentEngine.ACTION_Prepare;
-
+	
 			}else if(docStatus.equals(DocumentEngine.STATUS_Completed)) {
-
+	
 				if(getM_Production_ID() == 0)
 				{
 					index = 0;
 					options[index++] = DocumentEngine.ACTION_Void;
 					options[index++] = DocumentEngine.ACTION_Close;
 					options[index++] = DocumentEngine.ACTION_ReActivate;
-
+	
 				}else {
-
+	
 					index = 0;
 					options[index++] = DocumentEngine.ACTION_Close;
 					options[index++] = DocumentEngine.ACTION_Reverse_Accrual;
 					options[index++] = DocumentEngine.ACTION_Reverse_Correct;
 				}
-
-
+	
+	
 				return index;
 			}
-
+			
 		}else if(MPPWorkProcess.JP_PP_WORKPROCESSTYPE_MaterialMovement.equals(JP_PP_WorkProcessType)) {
 
 			if (docStatus.equals(DocumentEngine.STATUS_Drafted) || docStatus.equals(DocumentEngine.STATUS_InProgress))
@@ -1785,8 +1784,8 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 					options[index++] = DocumentEngine.ACTION_Reverse_Accrual;
 					options[index++] = DocumentEngine.ACTION_Reverse_Correct;
 				}
-
-
+	
+	
 				return index;
 			}
 		}
@@ -2088,4 +2087,3 @@ public class MPPFact extends X_JP_PP_Fact implements DocAction,DocOptions
 
 
 }	//	MPPFact
-

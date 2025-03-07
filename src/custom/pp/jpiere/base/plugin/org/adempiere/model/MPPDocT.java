@@ -33,6 +33,8 @@ import org.compiere.util.Util;
  */
 public class MPPDocT extends X_JP_PP_DocT {
 
+	private static final long serialVersionUID = 2200188672033815464L;
+
 	public MPPDocT(Properties ctx, int JP_PP_DocT_ID, String trxName)
 	{
 		super(ctx, JP_PP_DocT_ID, trxName);

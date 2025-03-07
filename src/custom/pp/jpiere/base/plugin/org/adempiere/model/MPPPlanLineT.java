@@ -35,6 +35,8 @@ import org.compiere.util.Util;
  */
 public class MPPPlanLineT extends X_JP_PP_PlanLineT {
 
+	private static final long serialVersionUID = -4193521746807467246L;
+
 	public MPPPlanLineT(Properties ctx, int JP_PP_PlanLineT_ID, String trxName)
 	{
 		super(ctx, JP_PP_PlanLineT_ID, trxName);

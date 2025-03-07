@@ -35,6 +35,8 @@ import org.compiere.util.Msg;
  */
 public class MPPMMFactLine extends X_JP_PP_MM_FactLine {
 
+	private static final long serialVersionUID = 324103472910893806L;
+
 	public MPPMMFactLine(Properties ctx, int JP_PP_MM_FactLine_ID, String trxName) 
 	{
 		super(ctx, JP_PP_MM_FactLine_ID, trxName);

@@ -28,6 +28,8 @@ import org.compiere.util.CCache;
  */
 public class MPPWorkProcess extends X_JP_PP_WorkProcess {
 
+	private static final long serialVersionUID = -2600123830013096251L;
+
 	public MPPWorkProcess(Properties ctx, int JP_PP_WorkProcess_ID, String trxName) 
 	{
 		super(ctx, JP_PP_WorkProcess_ID, trxName);

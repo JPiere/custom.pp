@@ -25,6 +25,8 @@ import java.util.Properties;
  */
 public class MPPPlanLineTQT extends X_JP_PP_PlanLineTQT {
 
+	private static final long serialVersionUID = 8332918425810695390L;
+
 	public MPPPlanLineTQT(Properties ctx, int JP_PP_PlanLineTQT_ID, String trxName)
 	{
 		super(ctx, JP_PP_PlanLineTQT_ID, trxName);
